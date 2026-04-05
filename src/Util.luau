@@ -15,6 +15,26 @@ function Util.getInstance(className: string): Instance
 	return Instance.new(className)
 end
 
+function Util.clampToPlane(origin: Vector3, normal: Vector3, point: Vector3): Vector3
+	--@TODO
+	return Vector3.zero
+end
+
+function Util.getTriangleArea(a: Vector3, b: Vector3, c: Vector3): number
+	local ab = (a - b).Magnitude
+	local bc = (b - c).Magnitude
+	local ca = (c - a).Magnitude
+
+	local perimeter: number = ab + bc + ca
+	local semiPerimeterLength: number = perimeter / 2
+
+	local deltaA: number = (semiPerimeterLength - ab)
+	local deltaB: number = (semiPerimeterLength - bc)
+	local deltaC: number = (semiPerimeterLength - ca)
+
+	return math.sqrt(semiPerimeterLength * deltaA * deltaB * deltaC)
+end
+
 function Util.fillTriangle(
 	a: Vector3,
 	b: Vector3,

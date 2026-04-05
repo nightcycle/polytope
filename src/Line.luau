@@ -88,7 +88,7 @@ export type Line = StraightLine | QuadraticBezierLine
 do
 	Line.Any = {}
 
-	function Line.Any.eq(a: Point, b: Point): boolean
+	function Line.Any.eq(a: Line, b: Line): boolean
 		local subModule = Line[a.Type] :: any
 		assert(subModule.eq, `missing eq for type "{a.Type}"`)
 		return subModule.eq(a, b)

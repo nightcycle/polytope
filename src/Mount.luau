@@ -9,7 +9,13 @@ local Util = require(script.Parent.Util)
 export type Line = Line.Line
 export type Point = Point.Point
 export type VertexPoint = Point.VertexPoint
-export type DecorationConstructor = (origin: CFrame, scale: number, rotation: number, wobble: number) -> FillResult
+export type DecorationConstructor = (origin: CFrame, scale: number) -> FillResult
+export type DecorationInfo = {
+	Scale: NumberRange?,
+	Rotation: NumberRange?,
+	Wobble: NumberRange?,
+	Translation: NumberRange?,
+}
 export type FillInfo =
 	{
 		Type: "Surface",
@@ -18,20 +24,17 @@ export type FillInfo =
 	| {
 		Type: "Splatter",
 		Count: number,
-		Scale: NumberRange?,
-		Rotation: NumberRange?,
-		Wobble: NumberRange?,
+		Decoration: DecorationInfo,
 		Constructor: DecorationConstructor,
 	}
 	| {
-		Type: "Grid",
+		Type: "Stripes",
 		Count: number,
-		Scale: NumberRange?,
-		Rotation: NumberRange?,
-		Wobble: NumberRange?,
-		Translation: NumberRange?,
+		PerLine: number,
+		Decoration: DecorationInfo,
 		Constructor: DecorationConstructor,
 	}
+
 export type FillResult = {
 	Instances: { Instance },
 	Parts: { [BasePart]: CFrame },
@@ -126,6 +129,19 @@ do
 		return false
 	end
 
+	function Mount.Triangle.magnitude(mount: TriangleMount): number
+		return Util.getTriangleArea(mount.P1.Position, mount.P2.Position, mount.P3.Position)
+	end
+
+	function Mount.Triangle.isWithin(mount: TriangleMount, point: Vector3): boolean
+		local abc = Util.getTriangleArea(mount.P1.Position, mount.P2.Position, mount.P3.Position)
+		local pbc = Util.getTriangleArea(point, mount.P2.Position, mount.P3.Position)
+		local abp = Util.getTriangleArea(mount.P1.Position, mount.P2.Position, point)
+		local apc = Util.getTriangleArea(mount.P1.Position, point, mount.P3.Position)
+
+		return math.abs(abc - (pbc + abp + apc)) < CONSTANTS.FUZZY_EQ.AREA
+	end
+
 	function Mount.Triangle.getEdges(mount: TriangleMount): { Line }
 		return {
 			Line.Straight.new(mount.P1, mount.P2),
@@ -149,6 +165,43 @@ do
 		local subModule = Mount[a.Type] :: any
 		assert(subModule.eq, `missing eq for type "{a.Type}"`)
 		return subModule.eq(a, b)
+	end
+
+	function Mount.Any.magnitude(mount: Mount): number
+		local subModule = Mount[mount.Type] :: any
+		assert(subModule.magnitude, `missing magnitude for type "{mount.Type}"`)
+		return subModule.magnitude(mount)
+	end
+
+	function Mount.Any.isWithin(mount: Mount, point: Vector3): boolean
+		local subModule = Mount[mount.Type] :: any
+		assert(subModule.isWithin, `missing isWithin for type "{mount.Type}"`)
+		return subModule.isWithin(mount, point)
+	end
+
+	function Mount.Any.getEdges(mount: Mount): { Line }
+		local subModule = Mount[mount.Type] :: any
+		assert(subModule.getEdges, `missing getEdges for type "{mount.Type}"`)
+		return subModule.getEdges(mount)
+	end
+
+	function Mount.Any.getSharedEdges(a: Mount, b: Mount): { Line }
+		local aEdges = Mount.Any.getEdges(a)
+		local bEdges = Mount.Any.getEdges(b)
+		local out: { Line } = {}
+		for i, aEdge in aEdges do
+			local isShared = false
+			for j, bEdge in bEdges do
+				if Line.Any.eq(aEdge, bEdge) then
+					isShared = true
+					break
+				end
+			end
+			if isShared then
+				table.insert(out, aEdge)
+			end
+		end
+		return out
 	end
 end
 
