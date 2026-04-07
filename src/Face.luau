@@ -46,9 +46,9 @@ local CONSTANTS = require(script.Parent.CONSTANTS)
 -- References
 -- Private Functions
 -- Class
-local Mount = {}
+local Face = {}
 
-export type TriangleMount = {
+export type TriangleFace = {
 	Type: "Triangle",
 	P1: VertexPoint,
 	P2: VertexPoint,
@@ -57,16 +57,16 @@ export type TriangleMount = {
 	Up: Vector3,
 }
 do
-	Mount.Triangle = {}
+	Face.Triangle = {}
 
-	function Mount.Triangle.new(
+	function Face.Triangle.new(
 		p1: VertexPoint,
 		p2: VertexPoint,
 		p3: VertexPoint,
 		normal: Vector3,
 		up: Vector3
-	): TriangleMount
-		local mount = {
+	): TriangleFace
+		local face = {
 			Type = "Triangle" :: "Triangle",
 			P1 = p1,
 			P2 = p2,
@@ -74,17 +74,17 @@ do
 			Normal = normal,
 			Up = up,
 		}
-		table.freeze(mount)
-		return mount
+		table.freeze(face)
+		return face
 	end
 
-	function Mount.Triangle.fill(mount: TriangleMount, fill: FillInfo, rng: Random?): FillResult
+	function Face.Triangle.fill(face: TriangleFace, fill: FillInfo, rng: Random?): FillResult
 		if fill.Type == "Surface" then
 			local a, aCF, b, bCF = Util.fillTriangle(
-				mount.P1.Position,
-				mount.P2.Position,
-				mount.P3.Position,
-				mount.Normal,
+				face.P1.Position,
+				face.P2.Position,
+				face.P3.Position,
+				face.Normal,
 				fill.Thickness or CONSTANTS.MIN_THICKNESS
 			)
 			return {
@@ -100,7 +100,7 @@ do
 		end
 	end
 
-	function Mount.Triangle.eq(a: TriangleMount, b: TriangleMount): boolean
+	function Face.Triangle.eq(a: TriangleFace, b: TriangleFace): boolean
 		if a.Type ~= b.Type then
 			return false
 		end
@@ -129,68 +129,68 @@ do
 		return false
 	end
 
-	function Mount.Triangle.magnitude(mount: TriangleMount): number
-		return Util.getTriangleArea(mount.P1.Position, mount.P2.Position, mount.P3.Position)
+	function Face.Triangle.magnitude(face: TriangleFace): number
+		return Util.getTriangleArea(face.P1.Position, face.P2.Position, face.P3.Position)
 	end
 
-	function Mount.Triangle.isWithin(mount: TriangleMount, point: Vector3): boolean
-		local abc = Util.getTriangleArea(mount.P1.Position, mount.P2.Position, mount.P3.Position)
-		local pbc = Util.getTriangleArea(point, mount.P2.Position, mount.P3.Position)
-		local abp = Util.getTriangleArea(mount.P1.Position, mount.P2.Position, point)
-		local apc = Util.getTriangleArea(mount.P1.Position, point, mount.P3.Position)
+	function Face.Triangle.isWithin(face: TriangleFace, point: Vector3): boolean
+		local abc = Util.getTriangleArea(face.P1.Position, face.P2.Position, face.P3.Position)
+		local pbc = Util.getTriangleArea(point, face.P2.Position, face.P3.Position)
+		local abp = Util.getTriangleArea(face.P1.Position, face.P2.Position, point)
+		local apc = Util.getTriangleArea(face.P1.Position, point, face.P3.Position)
 
 		return math.abs(abc - (pbc + abp + apc)) < CONSTANTS.FUZZY_EQ.AREA
 	end
 
-	function Mount.Triangle.getEdges(mount: TriangleMount): { Line }
+	function Face.Triangle.getEdges(face: TriangleFace): { Line }
 		return {
-			Line.Straight.new(mount.P1, mount.P2),
-			Line.Straight.new(mount.P2, mount.P3),
-			Line.Straight.new(mount.P3, mount.P1),
+			Line.Straight.new(face.P1, face.P2),
+			Line.Straight.new(face.P2, face.P3),
+			Line.Straight.new(face.P3, face.P1),
 		}
 	end
 end
 
-export type Mount = TriangleMount
+export type Face = TriangleFace
 do
-	Mount.Any = {}
+	Face.Any = {}
 
-	function Mount.Any.fill(mount: Mount, fill: FillInfo, rng: Random?): FillResult
-		local subModule = Mount[mount.Type] :: any
-		assert(subModule.fill, `missing fill for type "{mount.Type}"`)
-		return subModule.fill(mount, fill, rng)
+	function Face.Any.fill(face: Face, fill: FillInfo, rng: Random?): FillResult
+		local subModule = Face[face.Type] :: any
+		assert(subModule.fill, `missing fill for type "{face.Type}"`)
+		return subModule.fill(face, fill, rng)
 	end
 
-	function Mount.Any.eq(a: Mount, b: Mount): boolean
-		local subModule = Mount[a.Type] :: any
+	function Face.Any.eq(a: Face, b: Face): boolean
+		local subModule = Face[a.Type] :: any
 		assert(subModule.eq, `missing eq for type "{a.Type}"`)
 		return subModule.eq(a, b)
 	end
 
-	function Mount.Any.magnitude(mount: Mount): number
-		local subModule = Mount[mount.Type] :: any
-		assert(subModule.magnitude, `missing magnitude for type "{mount.Type}"`)
-		return subModule.magnitude(mount)
+	function Face.Any.magnitude(face: Face): number
+		local subModule = Face[face.Type] :: any
+		assert(subModule.magnitude, `missing magnitude for type "{face.Type}"`)
+		return subModule.magnitude(face)
 	end
 
-	function Mount.Any.isWithin(mount: Mount, point: Vector3): boolean
-		local subModule = Mount[mount.Type] :: any
-		assert(subModule.isWithin, `missing isWithin for type "{mount.Type}"`)
-		return subModule.isWithin(mount, point)
+	function Face.Any.isWithin(face: Face, point: Vector3): boolean
+		local subModule = Face[face.Type] :: any
+		assert(subModule.isWithin, `missing isWithin for type "{face.Type}"`)
+		return subModule.isWithin(face, point)
 	end
 
-	function Mount.Any.getEdges(mount: Mount): { Line }
-		local subModule = Mount[mount.Type] :: any
-		assert(subModule.getEdges, `missing getEdges for type "{mount.Type}"`)
-		return subModule.getEdges(mount)
+	function Face.Any.getEdges(face: Face): { Line }
+		local subModule = Face[face.Type] :: any
+		assert(subModule.getEdges, `missing getEdges for type "{face.Type}"`)
+		return subModule.getEdges(face)
 	end
 
-	function Mount.Any.getSharedEdges(a: Mount, b: Mount): { Line }
-		if a.Type == b.Type and Mount[a.Type].getSharedEdges then
-			return Mount[a.Type].getSharedEdges(a, b)
+	function Face.Any.getSharedEdges(a: Face, b: Face): { Line }
+		if a.Type == b.Type and Face[a.Type].getSharedEdges then
+			return Face[a.Type].getSharedEdges(a, b)
 		end
-		local aEdges = Mount.Any.getEdges(a)
-		local bEdges = Mount.Any.getEdges(b)
+		local aEdges = Face.Any.getEdges(a)
+		local bEdges = Face.Any.getEdges(b)
 		local out: { Line } = {}
 		for i, aEdge in aEdges do
 			local isShared = false
@@ -208,4 +208,4 @@ do
 	end
 end
 
-return Mount
+return Face
