@@ -153,6 +153,105 @@ do
 	end
 end
 
+export type ConcaveNGonFace = {
+	Type: "ConcaveNGon",
+	Triangles: { TriangleFace },
+	Vertices: { VertexPoint },
+}
+do
+	Face.ConcaveNGon = {}
+
+	function Face.ConcaveNGon.new(vertices: { VertexPoint }): ConcaveNGonFace
+		local face = {
+			Type = "ConcaveNGon" :: "ConcaveNGon",
+			Triangles = {},
+			Vertices = table.clone(vertices),
+		}
+		for i = 2, #vertices - 1 do
+			local firstV = vertices[1]
+			local currentV = vertices[i]
+			local nextV = vertices[i + 1]
+			table.insert(face.Triangles, Face.Triangle.new(currentV, nextV, firstV, currentV.Normal))
+		end
+		table.freeze(face.Vertices)
+		table.freeze(face.Triangles)
+		table.freeze(face)
+		return face
+	end
+
+	function Face.ConcaveNGon.fill(face: ConcaveNGonFace, fill: FillInfo, rng: Random?): FillResult
+		if fill.Type == "Surface" then
+			local instList = {}
+			local map = {}
+			for i, tri in face.Triangles do
+				local tResult = Face.Triangle.fill(tri, fill, rng)
+				for i, inst in tResult.Instances do
+					table.insert(instList, inst)
+				end
+				for part, cf in tResult.Parts do
+					map[part] = cf
+				end
+			end
+			return {
+				Instances = instList,
+				Parts = map,
+			}
+		else
+			error(`unsupported type: "{fill.Type}"`)
+		end
+	end
+
+	function Face.ConcaveNGon.eq(a: ConcaveNGonFace, b: ConcaveNGonFace): boolean
+		if a.Type ~= b.Type then
+			return false
+		end
+		if #a.Triangles ~= #b.Triangles then
+			return false
+		end
+		for i = 1, #a.Triangles do
+			local aTri = a.Triangles[i]
+			local bTri = b.Triangles[i]
+			if not Face.Triangle.eq(aTri, bTri) then
+				return false
+			end
+		end
+		return true
+	end
+
+	function Face.ConcaveNGon.magnitude(face: ConcaveNGonFace): number
+		local out = 0
+		for i, tri in face.Triangles do
+			out += Face.Triangle.magnitude(tri)
+		end
+		return out
+	end
+
+	function Face.ConcaveNGon.isWithin(face: ConcaveNGonFace, point: Vector3): boolean
+		for i, tri in face.Triangles do
+			if Face.Triangle.isWithin(tri, point) then
+				return true
+			end
+		end
+		return false
+	end
+
+	function Face.ConcaveNGon.getPoints(face: ConcaveNGonFace): { VertexPoint }
+		return table.clone(face.Vertices)
+	end
+
+	function Face.ConcaveNGon.getEdges(face: ConcaveNGonFace): { Line }
+		local priorI = #face.Vertices
+		local out = {}
+		for i = 1, #face.Vertices do
+			local priorVert = face.Vertices[priorI]
+			local nextVert = face.Vertices[i]
+			priorI = i
+			table.insert(out, Line.Straight.new(priorVert, nextVert))
+		end
+		return out
+	end
+end
+
 export type QuadFace = {
 	Type: "Quad",
 	T1: TriangleFace,
