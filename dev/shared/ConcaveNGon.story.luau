@@ -12,7 +12,7 @@ local Osiris = require(game.ReplicatedStorage.DevPackages.Osiris)
 -- Class
 return function(frame)
 	Osiris.Init(game:GetService("CoreGui"), nil, true)
-	local priorInsts: { Instance } = {}
+	local instList: { Instance } = {}
 	local cleanUp = Osiris:Connect(function()
 		local pointNumber = Osiris.State(8)
 		local height = Osiris.State(0)
@@ -55,8 +55,8 @@ return function(frame)
 			end
 		end)
 
-		if didChange or #priorInsts == 0 then
-			for i, v in priorInsts do
+		if didChange or #instList == 0 then
+			for i, v in instList do
 				v:Destroy()
 			end
 			local points = {}
@@ -72,13 +72,13 @@ return function(frame)
 				)
 			end
 			local face = Package.Face.ConcaveNGon.new(points)
-			priorInsts = Package.Face.Any.debug(face)
+			instList = Package.Face.Any.debug(face)
 		end
 	end)
 
 	return function()
 		cleanUp()
-		for i, v in priorInsts do
+		for i, v in instList do
 			v:Destroy()
 		end
 	end
