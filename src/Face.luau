@@ -64,6 +64,154 @@ end
 -- Class
 local Face = {}
 
+export type RectangleFace = {
+	Type: "Rectangle",
+	Center: RotatedPoint,
+	Height: number,
+	Width: number,
+}
+do
+	Face.Rectangle = {}
+
+	function Face.Rectangle.new(center: RotatedPoint, height: number, width: number): RectangleFace
+		local face = {
+			Type = "Rectangle" :: "Rectangle",
+			Center = center,
+			Height = height,
+			Width = width,
+		}
+		table.freeze(face)
+		return face
+	end
+
+	function Face.Rectangle.normal(face: RectangleFace): Vector3
+		return -face.Center.CFrame.LookVector
+	end
+
+	function Face.Rectangle.up(face: RectangleFace): Vector3
+		return face.Center.CFrame.UpVector
+	end
+
+	function Face.Rectangle.right(face: RectangleFace): Vector3
+		return face.Center.CFrame.RightVector
+	end
+
+	function Face.Rectangle.center(face: RectangleFace): Vector3
+		return face.Center.Position
+	end
+
+	function Face.Rectangle.fill(face: RectangleFace, fill: FillInfo, rng: Random?): FillResult
+		if fill.Type == "Surface" then
+			local part = Instance.new("Part")
+			part.Size = Vector3.new(face.Width, face.Height, fill.Thickness or CONSTANTS.MIN_THICKNESS)
+			return {
+				Instances = { part },
+				Parts = {
+					[part] = CFrame.fromMatrix(
+						face.Center.Position - face.Center.Normal * part.Size.Z / 2,
+						face.Center.Up:Cross(-face.Center.Normal),
+						face.Center.Up
+					),
+				},
+			}
+		else
+			error(`unsupported type: "{fill.Type}"`)
+		end
+	end
+
+	function Face.Rectangle.eq(a: RectangleFace, b: RectangleFace): boolean
+		if a.Type ~= b.Type then
+			return false
+		end
+		if not Point.Any.eq(a.Center, b.Center) then
+			return false
+		end
+		if math.abs(a.Height - b.Height) > CONSTANTS.FUZZY_EQ.LENGTH then
+			return false
+		end
+		if math.abs(a.Width - b.Width) > CONSTANTS.FUZZY_EQ.LENGTH then
+			return false
+		end
+		return true
+	end
+
+	function Face.Rectangle.magnitude(face: RectangleFace): number
+		return face.Width * face.Height
+	end
+
+	function Face.Rectangle.isWithin(face: RectangleFace, point: Vector3): boolean
+		local offset = point - face.Center.Position
+		local projUp = math.abs(offset:Dot(face.Center.Up))
+		local projRight = math.abs(offset:Dot(face.Center.Up:Cross(-face.Center.Normal)))
+		local projNormal = math.abs(offset:Dot(face.Center.Normal))
+		return projUp <= face.Height / 2 + CONSTANTS.FUZZY_EQ.LENGTH
+			and projRight <= face.Width / 2 + CONSTANTS.FUZZY_EQ.LENGTH
+			and projNormal < CONSTANTS.FUZZY_EQ.LENGTH
+	end
+
+	function Face.Rectangle.fitIn(face: RectangleFace, count: number, up: Vector3?, right: Vector3?): { RectangleFace }
+		local normal = Face.Rectangle.normal(face)
+		up = upFromNormal(normal, right)
+		right = rightFromNormal(normal)
+
+		return {}
+	end
+
+	function Face.Rectangle.vertices(face: RectangleFace): { RotatedPoint }
+		local widthVec = (face.Center.Up:Cross(-face.Center.Normal)) * face.Width
+		local heightVec = face.Center.Up * face.Height
+		local origin = face.Center.Position - widthVec / 2 - heightVec / 2
+		return {
+			Point.Rotated.new(
+				CFrame.fromMatrix(
+					origin,
+					face.Center.CFrame.XVector,
+					face.Center.CFrame.YVector,
+					face.Center.CFrame.ZVector
+				)
+			),
+			Point.Rotated.new(
+				CFrame.fromMatrix(
+					origin + widthVec,
+					face.Center.CFrame.XVector,
+					face.Center.CFrame.YVector,
+					face.Center.CFrame.ZVector
+				)
+			),
+			Point.Rotated.new(
+				CFrame.fromMatrix(
+					origin + widthVec + heightVec,
+					face.Center.CFrame.XVector,
+					face.Center.CFrame.YVector,
+					face.Center.CFrame.ZVector
+				)
+			),
+			Point.Rotated.new(
+				CFrame.fromMatrix(
+					origin + heightVec,
+					face.Center.CFrame.XVector,
+					face.Center.CFrame.YVector,
+					face.Center.CFrame.ZVector
+				)
+			),
+		}
+	end
+
+	function Face.Rectangle.edges(face: RectangleFace): { Line }
+		local points = Face.Rectangle.vertices(face)
+		local vert1 = Point.Vertex.new(points[1].Position, points[1].Normal)
+		local vert2 = Point.Vertex.new(points[2].Position, points[2].Normal)
+		local vert3 = Point.Vertex.new(points[3].Position, points[3].Normal)
+		local vert4 = Point.Vertex.new(points[4].Position, points[4].Normal)
+
+		return {
+			Line.Straight.new(vert1, vert2),
+			Line.Straight.new(vert2, vert3),
+			Line.Straight.new(vert3, vert4),
+			Line.Straight.new(vert4, vert1),
+		}
+	end
+end
 export type TriangleFace = {
 	Type: "Triangle",
 	P1: VertexPoint,
@@ -166,12 +314,38 @@ do
 		return math.abs(abc - (pbc + abp + apc)) < CONSTANTS.FUZZY_EQ.AREA
 	end
 
-	function Face.Triangle.fit(face: TriangleFace, count: number, up: Vector3?, right: Vector3?): { RectangleFace }
+	function Face.Triangle.fitWithin(face: TriangleFace, up: Vector3?, right: Vector3?): RectangleFace
 		local normal = Face.Triangle.normal(face)
+		local center = Face.Triangle.center(face)
 		up = upFromNormal(normal, right)
+		assert(up, `bad up`)
 		right = rightFromNormal(normal)
+		assert(right, `bad right`)
+		local cf = CFrame.fromMatrix(center, right, up)
 
-		return {}
+		local offset1 = cf:PointToObjectSpace(face.P1.Position)
+		local offset2 = cf:PointToObjectSpace(face.P2.Position)
+		local offset3 = cf:PointToObjectSpace(face.P3.Position)
+
+		local width = 2 * math.max(math.abs(offset1.X), math.abs(offset2.X), math.abs(offset3.X))
+		local height = 2 * math.max(math.abs(offset1.Y), math.abs(offset2.Y), math.abs(offset3.Y))
+
+		return Face.Rectangle.new(Point.Rotated.new(cf), height, width)
+	end
+
+	function Face.Triangle.fitIn(face: TriangleFace, count: number, up: Vector3?, right: Vector3?): { RectangleFace }
+		local normal = Face.Triangle.normal(face)
+		-- local center = Face.Triangle.center(face)
+		up = upFromNormal(normal, right)
+		assert(up, `bad up`)
+		right = rightFromNormal(normal)
+		assert(right, `bad right`)
+
+		local outer = Face.Triangle.fitWithin(face, up, right)
+		-- https://www.sunshine2k.de/coding/java/TriangleRasterization/TriangleRasterization.html
+		return {
+			outer
+		}
 	end
 
 	function Face.Triangle.edges(face: TriangleFace): { Line }
@@ -331,7 +505,7 @@ do
 		return false
 	end
 
-	function Face.ConcaveNGon.fit(
+	function Face.ConcaveNGon.fitIn(
 		face: ConcaveNGonFace,
 		count: number,
 		up: Vector3?,
@@ -454,7 +628,7 @@ do
 		return Face.Triangle.isWithin(face.T1, point) or Face.Triangle.isWithin(face.T2, point)
 	end
 
-	function Face.Quad.fit(face: QuadFace, count: number, up: Vector3?, right: Vector3?): { RectangleFace }
+	function Face.Quad.fitIn(face: QuadFace, count: number, up: Vector3?, right: Vector3?): { RectangleFace }
 		local normal = Face.Quad.normal(face)
 		up = upFromNormal(normal, right)
 		right = rightFromNormal(normal)
@@ -478,155 +652,6 @@ do
 			Line.Straight.new(points[2], points[3]),
 			Line.Straight.new(points[3], points[4]),
 			Line.Straight.new(points[4], points[1]),
-		}
-	end
-end
-
-export type RectangleFace = {
-	Type: "Rectangle",
-	Center: RotatedPoint,
-	Height: number,
-	Width: number,
-}
-do
-	Face.Rectangle = {}
-
-	function Face.Rectangle.new(center: RotatedPoint, height: number, width: number): RectangleFace
-		local face = {
-			Type = "Rectangle" :: "Rectangle",
-			Center = center,
-			Height = height,
-			Width = width,
-		}
-		table.freeze(face)
-		return face
-	end
-
-	function Face.Rectangle.normal(face: RectangleFace): Vector3
-		return -face.Center.CFrame.LookVector
-	end
-
-	function Face.Rectangle.up(face: RectangleFace): Vector3
-		return face.Center.CFrame.UpVector
-	end
-
-	function Face.Rectangle.right(face: RectangleFace): Vector3
-		return face.Center.CFrame.RightVector
-	end
-
-	function Face.Rectangle.center(face: RectangleFace): Vector3
-		return face.Center.Position
-	end
-
-	function Face.Rectangle.fill(face: RectangleFace, fill: FillInfo, rng: Random?): FillResult
-		if fill.Type == "Surface" then
-			local part = Instance.new("Part")
-			part.Size = Vector3.new(face.Width, face.Height, fill.Thickness or CONSTANTS.MIN_THICKNESS)
-			return {
-				Instances = { part },
-				Parts = {
-					[part] = CFrame.fromMatrix(
-						face.Center.Position - face.Center.Normal * part.Size.Z / 2,
-						face.Center.Up:Cross(-face.Center.Normal),
-						face.Center.Up
-					),
-				},
-			}
-		else
-			error(`unsupported type: "{fill.Type}"`)
-		end
-	end
-
-	function Face.Rectangle.eq(a: RectangleFace, b: RectangleFace): boolean
-		if a.Type ~= b.Type then
-			return false
-		end
-		if not Point.Any.eq(a.Center, b.Center) then
-			return false
-		end
-		if math.abs(a.Height - b.Height) > CONSTANTS.FUZZY_EQ.LENGTH then
-			return false
-		end
-		if math.abs(a.Width - b.Width) > CONSTANTS.FUZZY_EQ.LENGTH then
-			return false
-		end
-		return true
-	end
-
-	function Face.Rectangle.magnitude(face: RectangleFace): number
-		return face.Width * face.Height
-	end
-
-	function Face.Rectangle.isWithin(face: RectangleFace, point: Vector3): boolean
-		local offset = point - face.Center.Position
-		local projUp = math.abs(offset:Dot(face.Center.Up))
-		local projRight = math.abs(offset:Dot(face.Center.Up:Cross(-face.Center.Normal)))
-		local projNormal = math.abs(offset:Dot(face.Center.Normal))
-		return projUp <= face.Height / 2 + CONSTANTS.FUZZY_EQ.LENGTH
-			and projRight <= face.Width / 2 + CONSTANTS.FUZZY_EQ.LENGTH
-			and projNormal < CONSTANTS.FUZZY_EQ.LENGTH
-	end
-
-	function Face.Rectangle.fit(face: RectangleFace, count: number, up: Vector3?, right: Vector3?): { RectangleFace }
-		local normal = Face.Rectangle.normal(face)
-		up = upFromNormal(normal, right)
-		right = rightFromNormal(normal)
-
-		return {}
-	end
-
-	function Face.Rectangle.vertices(face: RectangleFace): { RotatedPoint }
-		local widthVec = (face.Center.Up:Cross(-face.Center.Normal)) * face.Width
-		local heightVec = face.Center.Up * face.Height
-		local origin = face.Center.Position - widthVec / 2 - heightVec / 2
-		return {
-			Point.Rotated.new(
-				CFrame.fromMatrix(
-					origin,
-					face.Center.CFrame.XVector,
-					face.Center.CFrame.YVector,
-					face.Center.CFrame.ZVector
-				)
-			),
-			Point.Rotated.new(
-				CFrame.fromMatrix(
-					origin + widthVec,
-					face.Center.CFrame.XVector,
-					face.Center.CFrame.YVector,
-					face.Center.CFrame.ZVector
-				)
-			),
-			Point.Rotated.new(
-				CFrame.fromMatrix(
-					origin + widthVec + heightVec,
-					face.Center.CFrame.XVector,
-					face.Center.CFrame.YVector,
-					face.Center.CFrame.ZVector
-				)
-			),
-			Point.Rotated.new(
-				CFrame.fromMatrix(
-					origin + heightVec,
-					face.Center.CFrame.XVector,
-					face.Center.CFrame.YVector,
-					face.Center.CFrame.ZVector
-				)
-			),
-		}
-	end
-
-	function Face.Rectangle.edges(face: RectangleFace): { Line }
-		local points = Face.Rectangle.vertices(face)
-		local vert1 = Point.Vertex.new(points[1].Position, points[1].Normal)
-		local vert2 = Point.Vertex.new(points[2].Position, points[2].Normal)
-		local vert3 = Point.Vertex.new(points[3].Position, points[3].Normal)
-		local vert4 = Point.Vertex.new(points[4].Position, points[4].Normal)
-
-		return {
-			Line.Straight.new(vert1, vert2),
-			Line.Straight.new(vert2, vert3),
-			Line.Straight.new(vert3, vert4),
-			Line.Straight.new(vert4, vert1),
 		}
 	end
 end
@@ -671,10 +696,10 @@ do
 		return subModule.center(face)
 	end
 
-	function Face.Any.fit(face: Face): { RectangleFace }
+	function Face.Any.fitIn(face: Face): { RectangleFace }
 		local subModule = Face[face.Type] :: any
-		assert(subModule.fit, `missing fit for type "{face.Type}"`)
-		return subModule.fit(face)
+		assert(subModule.fitIn, `missing fitIn for type "{face.Type}"`)
+		return subModule.fitIn(face)
 	end
 
 	function Face.Any.magnitude(face: Face): number

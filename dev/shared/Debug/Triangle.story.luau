@@ -51,7 +51,7 @@ return function()
 			Package.ENV.DEBUG_SHOW_POINTS = false
 			instList = Package.Face.Any.debug(face)
 
-			for i, rect in Package.Face.Triangle.fit(face, 5) do
+			for i, rect in Package.Face.Triangle.fitIn(face, 5) do
 				for j, inst in Package.Face.Any.debug(rect) do
 					table.insert(instList, inst)
 				end
