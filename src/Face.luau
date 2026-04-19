@@ -1,6 +1,7 @@
 --!strict
 -- Services
 -- Packages
+local Draw = require(game.ReplicatedStorage.Packages.Draw)
 -- Modules
 local Line = require(script.Parent.Line)
 local Point = require(script.Parent.Point)
@@ -56,7 +57,6 @@ export type TriangleFace = {
 	P1: VertexPoint,
 	P2: VertexPoint,
 	P3: VertexPoint,
-	Normal: Vector3,
 }
 do
 	Face.Triangle = {}
@@ -67,7 +67,6 @@ do
 			P1 = p1,
 			P2 = p2,
 			P3 = p3,
-			Normal = (p1.Normal + p2.Normal + p3.Normal) / 3,
 		}
 		table.freeze(face)
 		return face
@@ -79,7 +78,7 @@ do
 				face.P1.Position,
 				face.P2.Position,
 				face.P3.Position,
-				face.Normal,
+				Face.Triangle.normal(face),
 				fill.Thickness or CONSTANTS.MIN_THICKNESS
 			)
 			return {
@@ -95,11 +94,12 @@ do
 		end
 	end
 
+	function Face.Triangle.normal(face: TriangleFace): Vector3
+		return (face.P1.Normal + face.P2.Normal + face.P3.Normal) / 3
+	end
+
 	function Face.Triangle.eq(a: TriangleFace, b: TriangleFace): boolean
 		if a.Type ~= b.Type then
-			return false
-		end
-		if not a.Normal:FuzzyEq(b.Normal, CONSTANTS.FUZZY_EQ.EPSILON) then
 			return false
 		end
 		if Point.Vertex.eq(a.P1, b.P1) then
@@ -218,6 +218,15 @@ do
 		end
 		return true
 	end
+	function Face.ConcaveNGon.normal(face: ConcaveNGonFace): Vector3
+		local sum = Vector3.zero
+		local count = 0
+		for i, v in face.Triangles do
+			sum += Face.Triangle.normal(v)
+			count += 1
+		end
+		return sum / math.max(count, 1)
+	end
 
 	function Face.ConcaveNGon.magnitude(face: ConcaveNGonFace): number
 		local out = 0
@@ -277,6 +286,10 @@ do
 		}
 		table.freeze(face)
 		return face
+	end
+
+	function Face.Quad.normal(face: QuadFace): Vector3
+		return (Face.Triangle.normal(face.T1) + Face.Triangle.normal(face.T2)) / 2
 	end
 
 	function Face.Quad.fill(face: QuadFace, fill: FillInfo, rng: Random?): FillResult
@@ -368,6 +381,10 @@ do
 		}
 		table.freeze(face)
 		return face
+	end
+
+	function Face.Rectangle.normal(face: RectangleFace): Vector3
+		return face.Center.Normal
 	end
 
 	function Face.Rectangle.fill(face: RectangleFace, fill: FillInfo, rng: Random?): FillResult
@@ -463,6 +480,12 @@ do
 		return subModule.eq(a, b)
 	end
 
+	function Face.Any.normal(face: Face): Vector3
+		local subModule = Face[face.Type] :: any
+		assert(subModule.normal, `missing normal for type "{face.Type}"`)
+		return subModule.normal(face)
+	end
+
 	function Face.Any.magnitude(face: Face): number
 		local subModule = Face[face.Type] :: any
 		assert(subModule.magnitude, `missing magnitude for type "{face.Type}"`)
@@ -550,6 +573,10 @@ do
 
 		for i, edge in Face.Any.getEdges(face) do
 			Util.join(out, Line.Any.debug(edge))
+		end
+
+		if ENV.DEBUG_SHOW_NORMALS then
+			-- local normal = Face.Any.normal(face)
 		end
 		if ENV.DEBUG_SHOW_FACES then
 			local result = Face.Any.fill(face, {

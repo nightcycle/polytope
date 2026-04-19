@@ -13,6 +13,7 @@ local DEFAULT_ENV = {
 	IS_VERBOSE = false,
 	DEBUG_SHOW_POINTS = true,
 	DEBUG_SHOW_LINES = true,
+	DEBUG_SHOW_NORMALS = true,
 	DEBUG_SHOW_FACES = true,
 	DEBUG_PARTS_LOCKED = true,
 }
