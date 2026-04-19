@@ -50,8 +50,9 @@ function rightFromNormal(normal: Vector3): Vector3
 	end
 	return Vector3.yAxis:Cross(-normal).Unit
 end
-function upFromNormal(normal: Vector3): Vector3
-	local right = rightFromNormal(normal)
+function upFromNormal(normal: Vector3, right: Vector3?): Vector3
+	right = right or rightFromNormal(normal)
+	assert(right, `bad right`)
 	local up = right:Cross(-normal)
 	if up:Dot(Vector3.yAxis) >= 0 then
 		return up.Unit
@@ -163,6 +164,14 @@ do
 		local apc = Util.getTriangleArea(face.P1.Position, point, face.P3.Position)
 
 		return math.abs(abc - (pbc + abp + apc)) < CONSTANTS.FUZZY_EQ.AREA
+	end
+
+	function Face.Triangle.fit(face: TriangleFace, count: number, up: Vector3?, right: Vector3?): { RectangleFace }
+		local normal = Face.Triangle.normal(face)
+		up = upFromNormal(normal, right)
+		right = rightFromNormal(normal)
+
+		return {}
 	end
 
 	function Face.Triangle.getEdges(face: TriangleFace): { Line }
@@ -322,6 +331,19 @@ do
 		return false
 	end
 
+	function Face.ConcaveNGon.fit(
+		face: ConcaveNGonFace,
+		count: number,
+		up: Vector3?,
+		right: Vector3?
+	): { RectangleFace }
+		local normal = Face.ConcaveNGon.normal(face)
+		up = upFromNormal(normal, right)
+		right = rightFromNormal(normal)
+
+		return {}
+	end
+
 	function Face.ConcaveNGon.getPoints(face: ConcaveNGonFace): { VertexPoint }
 		return table.clone(face.Vertices)
 	end
@@ -432,6 +454,14 @@ do
 		return Face.Triangle.isWithin(face.T1, point) or Face.Triangle.isWithin(face.T2, point)
 	end
 
+	function Face.Quad.fit(face: QuadFace, count: number, up: Vector3?, right: Vector3?): { RectangleFace }
+		local normal = Face.Quad.normal(face)
+		up = upFromNormal(normal, right)
+		right = rightFromNormal(normal)
+
+		return {}
+	end
+
 	function Face.Quad.getPoints(face: QuadFace): { VertexPoint }
 		return {
 			face.T1.P1,
@@ -537,6 +567,14 @@ do
 			and projNormal < CONSTANTS.FUZZY_EQ.LENGTH
 	end
 
+	function Face.Rectangle.fit(face: RectangleFace, count: number, up: Vector3?, right: Vector3?): { RectangleFace }
+		local normal = Face.Rectangle.normal(face)
+		up = upFromNormal(normal, right)
+		right = rightFromNormal(normal)
+
+		return {}
+	end
+
 	function Face.Rectangle.getPoints(face: RectangleFace): { RotatedPoint }
 		local widthVec = (face.Center.Up:Cross(-face.Center.Normal)) * face.Width
 		local heightVec = face.Center.Up * face.Height
@@ -631,6 +669,12 @@ do
 		local subModule = Face[face.Type] :: any
 		assert(subModule.center, `missing center for type "{face.Type}"`)
 		return subModule.center(face)
+	end
+
+	function Face.Any.fit(face: Face): { RectangleFace }
+		local subModule = Face[face.Type] :: any
+		assert(subModule.fit, `missing fit for type "{face.Type}"`)
+		return subModule.fit(face)
 	end
 
 	function Face.Any.magnitude(face: Face): number

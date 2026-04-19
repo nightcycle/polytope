@@ -50,6 +50,13 @@ return function()
 			local orig = Package.ENV.DEBUG_SHOW_POINTS
 			Package.ENV.DEBUG_SHOW_POINTS = false
 			instList = Package.Face.Any.debug(face)
+
+			for i, rect in Package.Face.Triangle.fit(face, 5) do
+				for j, inst in Package.Face.Any.debug(rect) do
+					table.insert(instList, inst)
+				end
+			end
+
 			Package.ENV.DEBUG_SHOW_POINTS = orig
 		end
 	end)
