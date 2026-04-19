@@ -88,14 +88,23 @@ do
 					[b] = bCF,
 				},
 			}
-		-- elseif fill.Type == "Splatter" then
 		else
 			error(`unsupported type: "{fill.Type}"`)
 		end
 	end
 
 	function Face.Triangle.normal(face: TriangleFace): Vector3
-		return (face.P1.Normal + face.P2.Normal + face.P3.Normal) / 3
+		local avg = (face.P1.Normal + face.P2.Normal + face.P3.Normal) / 3
+		local fromPos = (face.P2.Position - face.P1.Position):Cross(face.P3.Position - face.P1.Position).Unit
+		if fromPos:Dot(avg) > 0 then
+			return fromPos
+		else
+			return -fromPos
+		end
+	end
+
+	function Face.Triangle.center(face: TriangleFace): Vector3
+		return (face.P1.Position + face.P2.Position + face.P3.Position) / 3
 	end
 
 	function Face.Triangle.eq(a: TriangleFace, b: TriangleFace): boolean
@@ -218,11 +227,22 @@ do
 		end
 		return true
 	end
+
 	function Face.ConcaveNGon.normal(face: ConcaveNGonFace): Vector3
 		local sum = Vector3.zero
 		local count = 0
-		for i, v in face.Triangles do
-			sum += Face.Triangle.normal(v)
+		for i, v in face.Vertices do
+			sum += v.Normal
+			count += 1
+		end
+		return sum / math.max(count, 1)
+	end
+
+	function Face.ConcaveNGon.center(face: ConcaveNGonFace): Vector3
+		local sum = Vector3.zero
+		local count = 0
+		for i, v in face.Vertices do
+			sum += v.Position
 			count += 1
 		end
 		return sum / math.max(count, 1)
@@ -290,6 +310,10 @@ do
 
 	function Face.Quad.normal(face: QuadFace): Vector3
 		return (Face.Triangle.normal(face.T1) + Face.Triangle.normal(face.T2)) / 2
+	end
+
+	function Face.Quad.center(face: QuadFace): Vector3
+		return (Face.Triangle.center(face.T1) + Face.Triangle.center(face.T2)) / 2
 	end
 
 	function Face.Quad.fill(face: QuadFace, fill: FillInfo, rng: Random?): FillResult
@@ -387,6 +411,10 @@ do
 		return face.Center.Normal
 	end
 
+	function Face.Rectangle.center(face: RectangleFace): Vector3
+		return face.Center.Position
+	end
+
 	function Face.Rectangle.fill(face: RectangleFace, fill: FillInfo, rng: Random?): FillResult
 		if fill.Type == "Surface" then
 			local part = Instance.new("Part")
@@ -441,10 +469,38 @@ do
 		local heightVec = face.Center.Up * face.Height
 		local origin = face.Center.Position - widthVec / 2 - heightVec / 2
 		return {
-			Point.Rotated.new(origin, face.Center.Normal, face.Center.Up),
-			Point.Rotated.new(origin + widthVec, face.Center.Normal, face.Center.Up),
-			Point.Rotated.new(origin + widthVec + heightVec, face.Center.Normal, face.Center.Up),
-			Point.Rotated.new(origin + heightVec, face.Center.Normal, face.Center.Up),
+			Point.Rotated.new(
+				CFrame.fromMatrix(
+					origin,
+					face.Center.CFrame.XVector,
+					face.Center.CFrame.YVector,
+					face.Center.CFrame.ZVector
+				)
+			),
+			Point.Rotated.new(
+				CFrame.fromMatrix(
+					origin + widthVec,
+					face.Center.CFrame.XVector,
+					face.Center.CFrame.YVector,
+					face.Center.CFrame.ZVector
+				)
+			),
+			Point.Rotated.new(
+				CFrame.fromMatrix(
+					origin + widthVec + heightVec,
+					face.Center.CFrame.XVector,
+					face.Center.CFrame.YVector,
+					face.Center.CFrame.ZVector
+				)
+			),
+			Point.Rotated.new(
+				CFrame.fromMatrix(
+					origin + heightVec,
+					face.Center.CFrame.XVector,
+					face.Center.CFrame.YVector,
+					face.Center.CFrame.ZVector
+				)
+			),
 		}
 	end
 
@@ -484,6 +540,12 @@ do
 		local subModule = Face[face.Type] :: any
 		assert(subModule.normal, `missing normal for type "{face.Type}"`)
 		return subModule.normal(face)
+	end
+
+	function Face.Any.center(face: Face): Vector3
+		local subModule = Face[face.Type] :: any
+		assert(subModule.center, `missing center for type "{face.Type}"`)
+		return subModule.center(face)
 	end
 
 	function Face.Any.magnitude(face: Face): number
@@ -576,7 +638,10 @@ do
 		end
 
 		if ENV.DEBUG_SHOW_NORMALS then
-			-- local normal = Face.Any.normal(face)
+			local normal = Face.Any.normal(face)
+			local center = Face.Any.center(face)
+			table.insert(out, Draw.point(center, Color3.new(0, 1, 0)))
+			table.insert(out, Draw.vector(center, normal * 3, Color3.new(0, 0, 1)))
 		end
 		if ENV.DEBUG_SHOW_FACES then
 			local result = Face.Any.fill(face, {

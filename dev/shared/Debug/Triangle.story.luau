@@ -45,8 +45,7 @@ return function()
 			local face = Package.Face.Triangle.new(
 				Package.Point.Vertex.new(p1:get().Position, p1:get().UpVector),
 				Package.Point.Vertex.new(p2:get().Position, p2:get().UpVector),
-				Package.Point.Vertex.new(p3:get().Position, p3:get().UpVector),
-				p1:get().UpVector
+				Package.Point.Vertex.new(p3:get().Position, p3:get().UpVector)
 			)
 			local orig = Package.ENV.DEBUG_SHOW_POINTS
 			Package.ENV.DEBUG_SHOW_POINTS = false

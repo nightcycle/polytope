@@ -85,11 +85,9 @@ return function()
 				v:Destroy()
 			end
 			local face = Package.Face.Rectangle.new(
-				Package.Point.Basic.new(cfState:get().Position),
+				Package.Point.Rotated.new(cfState:get()),
 				heightState:get(),
-				widthState:get(),
-				-cfState:get().LookVector,
-				cfState:get().UpVector
+				widthState:get()
 			)
 			local orig = Package.ENV.DEBUG_SHOW_POINTS
 			Package.ENV.DEBUG_SHOW_POINTS = false

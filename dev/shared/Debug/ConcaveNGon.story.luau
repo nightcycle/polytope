@@ -50,7 +50,7 @@ return function(frame)
 					.SliderNum({
 						Arguments = {
 							Text = "Height",
-							Min = 1,
+							Min = 0,
 						},
 						States = {
 							number = height,

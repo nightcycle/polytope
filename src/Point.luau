@@ -97,19 +97,21 @@ end
 
 export type RotatedPoint = {
 	Type: "Rotated",
+	CFrame: CFrame,
+	Normal: Vector3,
 	Position: Vector3,
 	Up: Vector3,
-	Normal: Vector3,
 }
 do
 	Point.Rotated = {}
 
-	function Point.Rotated.new(position: Vector3, normal: Vector3, up: Vector3): RotatedPoint
+	function Point.Rotated.new(cf: CFrame): RotatedPoint
 		local out = {
 			Type = "Rotated" :: "Rotated",
-			Position = position,
-			Normal = normal,
-			Up = up,
+			CFrame = cf,
+			Normal = -cf.LookVector,
+			Up = cf.UpVector,
+			Position = cf.Position,
 		}
 		table.freeze(out)
 		return out
@@ -125,11 +127,7 @@ do
 	end
 
 	function Point.Rotated.lerp(a: RotatedPoint, b: RotatedPoint, alpha: number): RotatedPoint
-		return Point.Rotated.new(
-			a.Position:Lerp(b.Position, alpha),
-			a.Normal:Lerp(b.Normal, alpha).Unit,
-			a.Up:Lerp(b.Up, alpha).Unit
-		)
+		return Point.Rotated.new(a.CFrame:Lerp(b.CFrame, alpha))
 	end
 
 	function Point.Rotated.debug(point: RotatedPoint): { Instance }
