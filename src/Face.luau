@@ -346,10 +346,11 @@ do
 		assert(up, `bad up`)
 		right = rightFromNormal(normal)
 		assert(right, `bad right`)
-		local cf = CFrame.fromMatrix(center, right, up)
 		local maxRect = Face.Triangle.fitWithin(face, up, right)
 		local halfHeight = maxRect.Height / 2
 		local edges = Face.Triangle.edges(face)
+		local cf = CFrame.lookAlong(center, normal, up)
+
 		local function getHit(pos: Vector3, offset: Vector3): Vector3?
 			local line = Line.Straight.new(Point.Vertex.new(pos, normal), Point.Vertex.new(pos + offset, normal))
 			for i, edge in edges do
@@ -360,20 +361,29 @@ do
 			end
 			return nil
 		end
+
 		local function solveSlice(offsetX: number): NumberRange?
-			local origin = cf * CFrame.new(offsetX, 0, 0)
-			local topHit = getHit(origin.Position, up * halfHeight)
-			if not topHit then
+			local topHit = getHit(center + right * offsetX, up * halfHeight)
+			local bottomHit = getHit(center + right * offsetX, -up * halfHeight)
+			if not topHit and not bottomHit then
 				return nil
 			end
-			local bottomHit = getHit(origin.Position, -up * halfHeight)
-			if not bottomHit then
-				return nil
+			if bottomHit and not topHit then
+				local newCenter = bottomHit + up * CONSTANTS.FUZZY_EQ.LENGTH
+				topHit = getHit(newCenter, up * maxRect.Height)
+				bottomHit = getHit(newCenter, -up * maxRect.Height)
+			elseif topHit and not bottomHit then
+				local newCenter = topHit - up * CONSTANTS.FUZZY_EQ.LENGTH
+				topHit = getHit(newCenter, up * maxRect.Height)
+				bottomHit = getHit(newCenter, -up * maxRect.Height)
 			end
 
-			local topOffset = origin:PointToObjectSpace(topHit)
-			local bottomOffset = origin:PointToObjectSpace(bottomHit)
-			return NumberRange.new(bottomOffset.Y, topOffset.Y)
+			if bottomHit and topHit then
+				local topOffset = cf:PointToObjectSpace(topHit)
+				local bottomOffset = cf:PointToObjectSpace(bottomHit)
+				return NumberRange.new(bottomOffset.Y, topOffset.Y)
+			end
+			return nil
 		end
 
 		local out = {}
@@ -383,12 +393,12 @@ do
 			local halfWidth = maxRect.Width / 2
 			for i = 0, count - 1 do
 				local xMin = i * actualColumnWidth - halfWidth
-				local yRange1 = solveSlice(xMin)
+				local yRange1 = solveSlice(xMin) -- or NumberRange.new(-halfHeight,halfHeight)
 				if not yRange1 then
 					continue
 				end
 				local xMax = (i + 1) * actualColumnWidth - halfWidth
-				local yRange2 = solveSlice(xMax)
+				local yRange2 = solveSlice(xMax) -- or NumberRange.new(-halfHeight,halfHeight)
 				if not yRange2 then
 					continue
 				end
@@ -403,7 +413,7 @@ do
 					Face.Rectangle.new(
 						Point.Rotated.new(
 							CFrame.fromMatrix(
-								cf.Position + (xMin - halfWidth + rWidth / 2) * right + ((yMax - yMin) / 2) * up,
+								cf.Position + (xMin + rWidth / 2) * right + (yMin + rHeight / 2) * up,
 								cf.XVector,
 								cf.YVector,
 								cf.ZVector
@@ -416,7 +426,7 @@ do
 			end
 		end
 
-		return {}
+		return out
 	end
 
 	function Face.Triangle.edges(face: TriangleFace): { Line.StraightLine }
