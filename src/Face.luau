@@ -174,7 +174,7 @@ do
 		return {}
 	end
 
-	function Face.Triangle.getEdges(face: TriangleFace): { Line }
+	function Face.Triangle.edges(face: TriangleFace): { Line }
 		return {
 			Line.Straight.new(face.P1, face.P2),
 			Line.Straight.new(face.P2, face.P3),
@@ -182,7 +182,7 @@ do
 		}
 	end
 
-	function Face.Triangle.getPoints(face: TriangleFace): { Point }
+	function Face.Triangle.vertices(face: TriangleFace): { VertexPoint }
 		return {
 			face.P1,
 			face.P2,
@@ -344,11 +344,11 @@ do
 		return {}
 	end
 
-	function Face.ConcaveNGon.getPoints(face: ConcaveNGonFace): { VertexPoint }
+	function Face.ConcaveNGon.vertices(face: ConcaveNGonFace): { VertexPoint }
 		return table.clone(face.Vertices)
 	end
 
-	function Face.ConcaveNGon.getEdges(face: ConcaveNGonFace): { Line }
+	function Face.ConcaveNGon.edges(face: ConcaveNGonFace): { Line }
 		local priorI = #face.Vertices
 		local out = {}
 		for i = 1, #face.Vertices do
@@ -462,7 +462,7 @@ do
 		return {}
 	end
 
-	function Face.Quad.getPoints(face: QuadFace): { VertexPoint }
+	function Face.Quad.vertices(face: QuadFace): { VertexPoint }
 		return {
 			face.T1.P1,
 			face.T1.P2,
@@ -471,8 +471,8 @@ do
 		}
 	end
 
-	function Face.Quad.getEdges(face: QuadFace): { Line }
-		local points = Face.Quad.getPoints(face)
+	function Face.Quad.edges(face: QuadFace): { Line }
+		local points = Face.Quad.vertices(face)
 		return {
 			Line.Straight.new(points[1], points[2]),
 			Line.Straight.new(points[2], points[3]),
@@ -575,7 +575,7 @@ do
 		return {}
 	end
 
-	function Face.Rectangle.getPoints(face: RectangleFace): { RotatedPoint }
+	function Face.Rectangle.vertices(face: RectangleFace): { RotatedPoint }
 		local widthVec = (face.Center.Up:Cross(-face.Center.Normal)) * face.Width
 		local heightVec = face.Center.Up * face.Height
 		local origin = face.Center.Position - widthVec / 2 - heightVec / 2
@@ -615,8 +615,8 @@ do
 		}
 	end
 
-	function Face.Rectangle.getEdges(face: RectangleFace): { Line }
-		local points = Face.Rectangle.getPoints(face)
+	function Face.Rectangle.edges(face: RectangleFace): { Line }
+		local points = Face.Rectangle.vertices(face)
 		local vert1 = Point.Vertex.new(points[1].Position, points[1].Normal)
 		local vert2 = Point.Vertex.new(points[2].Position, points[2].Normal)
 		local vert3 = Point.Vertex.new(points[3].Position, points[3].Normal)
@@ -689,24 +689,24 @@ do
 		return subModule.isWithin(face, point)
 	end
 
-	function Face.Any.getEdges(face: Face): { Line }
+	function Face.Any.edges(face: Face): { Line }
 		local subModule = Face[face.Type] :: any
-		assert(subModule.getEdges, `missing getEdges for type "{face.Type}"`)
-		return subModule.getEdges(face)
+		assert(subModule.edges, `missing edges for type "{face.Type}"`)
+		return subModule.edges(face)
 	end
 
-	function Face.Any.getPoints(face: Face): { Point }
+	function Face.Any.vertices(face: Face): { Point }
 		local subModule = Face[face.Type] :: any
-		assert(subModule.getPoints, `missing getPoints for type "{face.Type}"`)
-		return subModule.getPoints(face)
+		assert(subModule.vertices, `missing vertices for type "{face.Type}"`)
+		return subModule.vertices(face)
 	end
 
 	function Face.Any.getSharedEdges(a: Face, b: Face): { Line }
 		if a.Type == b.Type and Face[a.Type].getSharedEdges then
 			return Face[a.Type].getSharedEdges(a, b)
 		end
-		local aEdges = Face.Any.getEdges(a)
-		local bEdges = Face.Any.getEdges(b)
+		local aEdges = Face.Any.edges(a)
+		local bEdges = Face.Any.edges(b)
 		local out: { Line } = {}
 		for i, aEdge in aEdges do
 			for j, bEdge in bEdges do
@@ -729,8 +729,8 @@ do
 		if a.Type == b.Type and Face[a.Type].getSharedPoints then
 			return Face[a.Type].getSharedPoints(a, b, includeNormals)
 		end
-		local aPoints = Face.Any.getPoints(a)
-		local bPoints = Face.Any.getPoints(b)
+		local aPoints = Face.Any.vertices(a)
+		local bPoints = Face.Any.vertices(b)
 		local out: { [BasicPoint]: {
 			A: Point,
 			B: Point,
@@ -762,7 +762,7 @@ do
 	function Face.Any.debug(face: Face): { Instance }
 		local out: { Instance } = {}
 
-		for i, edge in Face.Any.getEdges(face) do
+		for i, edge in Face.Any.edges(face) do
 			Util.join(out, Line.Any.debug(edge))
 		end
 
