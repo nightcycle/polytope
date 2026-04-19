@@ -58,6 +58,7 @@ return function()
 				local r = up:Cross(n).Unit
 				for i, rect in Package.Face.Triangle.fitIn(face, 40, up, r) do
 					for j, inst in Package.Face.Any.debug(rect) do
+						Package.Util.lock(inst)
 						table.insert(instList, inst)
 					end
 				end

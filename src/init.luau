@@ -14,5 +14,6 @@ Module.Face = require(script.Face)
 Module.Line = require(script.Line)
 Module.Point = require(script.Point)
 Module.ENV = require(script.ENV)
+Module.Util = require(script.Util)
 
 return Module

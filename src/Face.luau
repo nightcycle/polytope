@@ -368,14 +368,27 @@ do
 			if not topHit and not bottomHit then
 				return nil
 			end
-			if bottomHit and not topHit then
-				local newCenter = bottomHit + up * CONSTANTS.FUZZY_EQ.LENGTH
-				topHit = getHit(newCenter, up * maxRect.Height)
-				bottomHit = getHit(newCenter, -up * maxRect.Height)
-			elseif topHit and not bottomHit then
-				local newCenter = topHit - up * CONSTANTS.FUZZY_EQ.LENGTH
-				topHit = getHit(newCenter, up * maxRect.Height)
-				bottomHit = getHit(newCenter, -up * maxRect.Height)
+			local function tryRedo(sign: number)
+				if bottomHit and not topHit then
+					local newCenter = bottomHit + sign * up * CONSTANTS.FUZZY_EQ.LENGTH
+					return getHit(newCenter, up * maxRect.Height), getHit(newCenter, -up * maxRect.Height)
+				elseif topHit and not bottomHit then
+					local newCenter = topHit - sign * up * CONSTANTS.FUZZY_EQ.LENGTH
+					return getHit(newCenter, up * maxRect.Height), getHit(newCenter, -up * maxRect.Height)
+				end
+				return nil, nil
+			end
+			if not bottomHit or not topHit then
+				local newTopHit, newBottomHit = tryRedo(1)
+				if newBottomHit and newTopHit then
+					topHit, bottomHit = newTopHit, newBottomHit
+				end
+			end
+			if not bottomHit or not topHit then
+				local newTopHit, newBottomHit = tryRedo(-1)
+				if newBottomHit and newTopHit then
+					topHit, bottomHit = newTopHit, newBottomHit
+				end
 			end
 
 			if bottomHit and topHit then
@@ -398,8 +411,11 @@ do
 					continue
 				end
 				local xMax = (i + 1) * actualColumnWidth - halfWidth
-				local yRange2 = solveSlice(xMax) -- or NumberRange.new(-halfHeight,halfHeight)
+				local yRange2 = solveSlice(xMax) --aor NumberRange.new(-halfHeight,halfHeight)
 				if not yRange2 then
+					continue
+				end
+				if yRange1.Max < yRange2.Min or yRange1.Min > yRange2.Max then
 					continue
 				end
 				local yMin = math.max(yRange1.Min, yRange2.Min)
