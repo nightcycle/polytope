@@ -4,6 +4,7 @@
 local Package = require(game.ReplicatedStorage.Packages.package)
 local Osiris = require(game.ReplicatedStorage.DevPackages.Osiris)
 -- Modules
+local Controllers = require(game.ReplicatedStorage.Shared.Controllers)
 -- Types
 -- Constants
 -- Variables
@@ -11,7 +12,9 @@ local Osiris = require(game.ReplicatedStorage.DevPackages.Osiris)
 -- Private Functions
 -- Class
 return function()
-	Osiris.Init(game:GetService("CoreGui"), nil, true)
+	pcall(function(...)
+		Osiris.Init(game:GetService("CoreGui"), nil, false)
+	end)
 	local instList: { Instance } = {}
 	local cleanUp = Osiris:Connect(function()
 		local p1 = Osiris.State(Vector3.zero)
@@ -24,7 +27,8 @@ return function()
 			Arguments = {
 				Title = "Controls",
 			},
-		}, function(_)
+		}, function(window)
+			Controllers.Osiris.PositionInput({ States = { position = p1 }, Extra = { parent = window } })
 			for i, v in { p1, p2, p3, p4 } do
 				if
 					Osiris.Widget

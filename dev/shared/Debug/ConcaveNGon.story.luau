@@ -11,7 +11,9 @@ local Osiris = require(game.ReplicatedStorage.DevPackages.Osiris)
 -- Private Functions
 -- Class
 return function(frame)
-	Osiris.Init(game:GetService("CoreGui"), nil, true)
+	pcall(function(...)
+		Osiris.Init(game:GetService("CoreGui"), nil, false)
+	end)
 	local instList: { Instance } = {}
 	local cleanUp = Osiris:Connect(function()
 		local pointNumber = Osiris.State(8)
