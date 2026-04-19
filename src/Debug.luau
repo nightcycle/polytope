@@ -2,7 +2,6 @@
 -- Services
 -- Packages
 -- Modules
-local ENV = require(script.Parent.ENV)
 -- Types
 -- Constants
 -- Variables

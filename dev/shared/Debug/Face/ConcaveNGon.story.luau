@@ -76,6 +76,7 @@ return function(frame)
 			end
 			local face = Package.Face.ConcaveNGon.new(points)
 			instList = Package.Face.Any.debug(face)
+			Package.Debug.lock(instList, true)
 		end
 	end)
 

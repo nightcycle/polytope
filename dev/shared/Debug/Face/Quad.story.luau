@@ -47,6 +47,7 @@ return function()
 				didChange = true
 			end
 		end
+
 		if didChange or #instList == 0 then
 			for i, v in instList do
 				v:Destroy()
@@ -57,10 +58,34 @@ return function()
 				Package.Point.Vertex.new(p3:get().Position, p3:get().UpVector),
 				Package.Point.Basic.new(p4:get())
 			)
+			do
+				Package.ENV.DEBUG_SHOW_NORMALS = false
+				local n = Package.Face.Any.normal(face).Unit
+				local up = Vector3.zAxis:Cross(-n).Unit
+				local r = up:Cross(n).Unit
+				for i, rect in
+					Package.Face.Any.tile(face, {
+						Type = "Rows",
+						Width = {
+							Type = "Count",
+							Value = 8,
+							RetryOnceIfNotExact = true,
+						},
+					}, up, r)
+				do
+					local rectInsts = Package.Face.Any.debug(rect)
+					Package.Debug.color(rectInsts, Color3.new(1, 0.5, 0), "Part")
+					Package.Debug.color(rectInsts, Color3.new(1, 1, 0), "Line")
+					Package.Debug.transparency(rectInsts, 0, "Line")
+					Package.Util.join(instList, rectInsts)
+				end
+				Package.ENV.DEBUG_SHOW_NORMALS = true
+			end
 			local orig = Package.ENV.DEBUG_SHOW_POINTS
 			Package.ENV.DEBUG_SHOW_POINTS = false
-			instList = Package.Face.Any.debug(face)
+			Package.Util.join(instList, Package.Face.Any.debug(face))
 			Package.ENV.DEBUG_SHOW_POINTS = orig
+			Package.Debug.lock(instList, true)
 		end
 	end)
 

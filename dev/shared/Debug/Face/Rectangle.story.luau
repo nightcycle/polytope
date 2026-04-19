@@ -93,6 +93,7 @@ return function()
 			Package.ENV.DEBUG_SHOW_POINTS = false
 			instList = Package.Face.Any.debug(face)
 			Package.ENV.DEBUG_SHOW_POINTS = orig
+			Package.Debug.lock(instList, true)
 		end
 	end)
 	return function()

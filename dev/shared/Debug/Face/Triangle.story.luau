@@ -56,10 +56,17 @@ return function()
 
 			do
 				Package.ENV.DEBUG_SHOW_NORMALS = false
-				local n = Package.Face.Triangle.normal(face).Unit
+				local n = Package.Face.Any.normal(face).Unit
 				local up = Vector3.zAxis:Cross(-n).Unit
-				local r = up:Cross(n).Unit
-				for i, rect in Package.Face.Triangle.fitIn(face, 5, up, r) do
+				local r = nil--up:Cross(n).Unit
+				for i, rect in Package.Face.Any.tile(face, {
+					Type = "Rows",
+					Width = {
+						Type = "Count",
+						Value = 5,
+						RetryOnceIfNotExact = true
+					},
+				}, up, r) do
 					local rectInsts = Package.Face.Any.debug(rect)
 					Package.Debug.color(rectInsts, Color3.new(1, 0.5, 0), "Part")
 					Package.Debug.color(rectInsts, Color3.new(1, 1, 0), "Line")

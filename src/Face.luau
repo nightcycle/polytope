@@ -1,12 +1,13 @@
 --!strict
 -- Services
 -- Packages
-local Draw = require(game.ReplicatedStorage.Packages.Draw)
+local Draw = require(script.Parent.Parent.Draw)
+local TableUtil = require(script.Parent.Parent.TableUtil)
+
 -- Modules
 local Line = require(script.Parent.Line)
 local Point = require(script.Parent.Point)
 local Util = require(script.Parent.Util)
-local Debug = require(script.Parent.Debug)
 local InstanceCache = require(script.Parent.InstanceCache)
 local ENV = require(script.Parent.ENV)
 -- Types
@@ -22,6 +23,21 @@ export type DecorationInfo = {
 	Wobble: NumberRange?,
 	Translation: NumberRange?,
 }
+
+export type TileFormat = {
+	Type: "Rows",
+	Width: {
+		Type: "Count",
+		Value: number,
+		RetryOnceIfNotExact: boolean?,
+	} | {
+		Type: "Length",
+		Value: number,
+	},
+	Direction: Enum.FillDirection?,
+}
+
+export type ContainmentType = "Rectangle"
 export type FillInfo =
 	{
 		Type: "Surface",
@@ -149,14 +165,6 @@ do
 		return projUp <= face.Height / 2 + CONSTANTS.FUZZY_EQ.LENGTH
 			and projRight <= face.Width / 2 + CONSTANTS.FUZZY_EQ.LENGTH
 			and projNormal < CONSTANTS.FUZZY_EQ.LENGTH
-	end
-
-	function Face.Rectangle.fitIn(face: RectangleFace, count: number, up: Vector3?, right: Vector3?): { RectangleFace }
-		local normal = Face.Rectangle.normal(face)
-		up = upFromNormal(normal, right)
-		right = rightFromNormal(normal)
-
-		return {}
 	end
 
 	function Face.Rectangle.vertices(face: RectangleFace): { RotatedPoint }
@@ -320,135 +328,158 @@ do
 		return math.abs(abc - (pbc + abp + apc)) < CONSTANTS.FUZZY_EQ.AREA
 	end
 
-	function Face.Triangle.fitWithin(face: TriangleFace, up: Vector3?, right: Vector3?): RectangleFace
-		local normal = Face.Triangle.normal(face)
-		local center = Face.Triangle.center(face)
-		up = upFromNormal(normal, right)
-		assert(up, `bad up`)
-		right = rightFromNormal(normal)
-		assert(right, `bad right`)
-		local cf = CFrame.fromMatrix(center, right, up)
+	function Face.Triangle.fit(
+		face: TriangleFace,
+		containmentType: ContainmentType,
+		up: Vector3?,
+		right: Vector3?
+	): Face
+		if containmentType == "Rectangle" then
+			local normal = Face.Triangle.normal(face)
+			local center = Face.Triangle.center(face)
+			up = upFromNormal(normal, right)
+			assert(up, `bad up`)
+			right = right or rightFromNormal(normal)
+			assert(right, `bad right`)
+			up = right:Cross(-normal).Unit
+			right = up:Cross(-normal).Unit
+			local cf = CFrame.fromMatrix(center, right, up)
 
-		local offset1 = cf:PointToObjectSpace(face.P1.Position)
-		local offset2 = cf:PointToObjectSpace(face.P2.Position)
-		local offset3 = cf:PointToObjectSpace(face.P3.Position)
+			local offset1 = cf:PointToObjectSpace(face.P1.Position)
+			local offset2 = cf:PointToObjectSpace(face.P2.Position)
+			local offset3 = cf:PointToObjectSpace(face.P3.Position)
 
-		local width = 2 * math.max(math.abs(offset1.X), math.abs(offset2.X), math.abs(offset3.X))
-		local height = 2 * math.max(math.abs(offset1.Y), math.abs(offset2.Y), math.abs(offset3.Y))
+			local width = 2 * math.max(math.abs(offset1.X), math.abs(offset2.X), math.abs(offset3.X))
+			local height = 2 * math.max(math.abs(offset1.Y), math.abs(offset2.Y), math.abs(offset3.Y))
 
-		return Face.Rectangle.new(Point.Rotated.new(cf), height, width)
+			return Face.Rectangle.new(Point.Rotated.new(cf), height, width)
+		else
+			error(`unsupported containment type: "{containmentType}"`)
+		end
 	end
 
 	-- https://www.sunshine2k.de/coding/java/TriangleRasterization/TriangleRasterization.html
-	function Face.Triangle.fitIn(
-		face: TriangleFace,
-		columnWidth: number,
-		up: Vector3?,
-		right: Vector3?
-	): { RectangleFace }
+	function Face.Triangle.tile(face: TriangleFace, format: TileFormat, up: Vector3?, right: Vector3?): { Face }
 		local normal = Face.Triangle.normal(face)
 		local center = Face.Triangle.center(face)
 		up = up or upFromNormal(normal, right)
 		assert(up, `bad up`)
 		right = right or rightFromNormal(normal)
 		assert(right, `bad right`)
-		local maxRect = Face.Triangle.fitWithin(face, up, right)
-		local halfHeight = maxRect.Height / 2
-		local edges = Face.Triangle.edges(face)
-		local cf = CFrame.lookAlong(center, normal, up)
+		up = right:Cross(-normal).Unit
+		right = up:Cross(-normal).Unit
 
-		local function getHit(pos: Vector3, offset: Vector3): Vector3?
-			local line = Line.Straight.new(Point.Vertex.new(pos, normal), Point.Vertex.new(pos + offset, normal))
-			for i, edge in edges do
-				local intersection = Line.Straight.intersection(line, edge)
-				if intersection then
-					return intersection
-				end
+		if format.Type == "Rows" then
+			if format.Direction == Enum.FillDirection.Horizontal then
+				local newFormat: TileFormat = table.clone(format)
+				newFormat.Direction = Enum.FillDirection.Vertical
+				return Face.Triangle.tile(face, newFormat, up, -(right:Cross(up)))
 			end
-			return nil
-		end
+			local columnWidth: number
+			local maxRect = Face.Triangle.fit(face, "Rectangle", up, right)
+			assert(maxRect.Type == "Rectangle", `bad maxRect`)
+			if format.Width.Type == "Count" then
+				if format.Width.Value <= 0 then
+					return {} -- done :D
+				end
+				columnWidth = maxRect.Width / (format.Width.Value + 2)
+			elseif format.Width.Type == "Length" then
+				columnWidth = format.Width.Value
+			else
+				error(`unsupported type: "{format.Width.Type}"`)
+			end
+			local halfHeight = maxRect.Height / 2
+			local edges = Face.Triangle.edges(face)
+			local cf = CFrame.lookAlong(center, normal, up)
 
-		local function solveSlice(offsetX: number): NumberRange?
-			local topHit = getHit(center + right * offsetX, up * halfHeight)
-			local bottomHit = getHit(center + right * offsetX, -up * halfHeight)
-			if not topHit and not bottomHit then
-				return nil
-			end
-			local function tryRedo(sign: number)
-				if bottomHit and not topHit then
-					local newCenter = bottomHit + sign * up * CONSTANTS.FUZZY_EQ.LENGTH
-					return getHit(newCenter, up * maxRect.Height), getHit(newCenter, -up * maxRect.Height)
-				elseif topHit and not bottomHit then
-					local newCenter = topHit - sign * up * CONSTANTS.FUZZY_EQ.LENGTH
-					return getHit(newCenter, up * maxRect.Height), getHit(newCenter, -up * maxRect.Height)
+			local function getHits(pos: Vector3, offset: Vector3): { Vector3 }
+				local line = Line.Straight.new(Point.Vertex.new(pos, normal), Point.Vertex.new(pos + offset, normal))
+				local hits: { Vector3 } = {}
+				for i, edge in edges do
+					local intersection = Line.Straight.intersection(line, edge)
+					if intersection then
+						table.insert(hits, intersection)
+					end
 				end
-				return nil, nil
-			end
-			if not bottomHit or not topHit then
-				local newTopHit, newBottomHit = tryRedo(1)
-				if newBottomHit and newTopHit then
-					topHit, bottomHit = newTopHit, newBottomHit
-				end
-			end
-			if not bottomHit or not topHit then
-				local newTopHit, newBottomHit = tryRedo(-1)
-				if newBottomHit and newTopHit then
-					topHit, bottomHit = newTopHit, newBottomHit
-				end
+				return hits
 			end
 
-			if bottomHit and topHit then
-				local topOffset = cf:PointToObjectSpace(topHit)
-				local bottomOffset = cf:PointToObjectSpace(bottomHit)
-				return NumberRange.new(bottomOffset.Y, topOffset.Y)
+			local function solveSlice(offsetX: number): NumberRange?
+				local lineHits = getHits(center + right * offsetX - up * halfHeight, up * maxRect.Height)
+				if #lineHits ~= 2 then
+					return nil
+				end
+				local offsetY1 = cf:PointToObjectSpace(lineHits[1]).Y
+				local offsetY2 = cf:PointToObjectSpace(lineHits[2]).Y
+				return NumberRange.new(math.min(offsetY1, offsetY2), math.max(offsetY1, offsetY2))
 			end
-			return nil
-		end
 
-		local out = {}
-		do
-			local count = math.floor(maxRect.Width / columnWidth)
-			local actualColumnWidth = maxRect.Width / count
-			local halfWidth = maxRect.Width / 2
-			for i = 0, count - 1 do
-				local xMin = i * actualColumnWidth - halfWidth
-				local yRange1 = solveSlice(xMin) -- or NumberRange.new(-halfHeight,halfHeight)
-				if not yRange1 then
-					continue
-				end
-				local xMax = (i + 1) * actualColumnWidth - halfWidth
-				local yRange2 = solveSlice(xMax) --aor NumberRange.new(-halfHeight,halfHeight)
-				if not yRange2 then
-					continue
-				end
-				if yRange1.Max < yRange2.Min or yRange1.Min > yRange2.Max then
-					continue
-				end
-				local yMin = math.max(yRange1.Min, yRange2.Min)
-				local yMax = math.min(yRange1.Max, yRange2.Max)
+			local out = {}
+			do
+				local count = math.floor(maxRect.Width / columnWidth)
+				local actualColumnWidth = maxRect.Width / count
+				local halfWidth = maxRect.Width / 2
+				for i = 0, count - 1 do
+					local xMin = i * actualColumnWidth - halfWidth
+					local yRange1 = solveSlice(xMin) -- or NumberRange.new(-halfHeight,halfHeight)
+					if not yRange1 then
+						continue
+					end
+					local xMax = (i + 1) * actualColumnWidth - halfWidth
+					local yRange2 = solveSlice(xMax) --aor NumberRange.new(-halfHeight,halfHeight)
+					if not yRange2 then
+						continue
+					end
+					if yRange1.Max < yRange2.Min or yRange1.Min > yRange2.Max then
+						continue
+					end
+					local yMin = math.max(yRange1.Min, yRange2.Min)
+					local yMax = math.min(yRange1.Max, yRange2.Max)
 
-				local rHeight = yMax - yMin
-				local rWidth = xMax - xMin
+					local rHeight = yMax - yMin
+					local rWidth = xMax - xMin
 
-				table.insert(
-					out,
-					Face.Rectangle.new(
-						Point.Rotated.new(
-							CFrame.fromMatrix(
-								cf.Position + (xMin + rWidth / 2) * right + (yMin + rHeight / 2) * up,
-								cf.XVector,
-								cf.YVector,
-								cf.ZVector
-							)
-						),
-						rHeight,
-						rWidth
+					table.insert(
+						out,
+						Face.Rectangle.new(
+							Point.Rotated.new(
+								CFrame.fromMatrix(
+									cf.Position + (xMin + rWidth / 2) * right + (yMin + rHeight / 2) * up,
+									cf.XVector,
+									cf.YVector,
+									cf.ZVector
+								)
+							),
+							rHeight,
+							rWidth
+						)
 					)
-				)
+				end
 			end
-		end
 
-		return out
+			if
+				format.Width.Type == "Count"
+				and format.Width.Value ~= #out
+				and format.Width.RetryOnceIfNotExact == true
+			then
+				local newFormat = TableUtil.deepCopy(format) :: typeof(format)
+				local newWidth = newFormat.Width :: typeof(format.Width)
+				newWidth.RetryOnceIfNotExact = false
+				local dif = math.abs(format.Width.Value - #out)
+				if format.Width.Value < #out then
+					newWidth.Value -= dif
+					return Face.Triangle.tile(face, newFormat, up, right)
+				else
+					newWidth.Value += dif
+					newWidth.Value = math.max(newWidth.Value, 1)
+					return Face.Triangle.tile(face, newFormat, up, right)
+				end
+			end
+
+			return out
+		else
+			error(`unsupported format: "{format.Type}"`)
+		end
 	end
 
 	function Face.Triangle.edges(face: TriangleFace): { Line.StraightLine }
@@ -608,19 +639,6 @@ do
 		return false
 	end
 
-	function Face.ConcaveNGon.fitIn(
-		face: ConcaveNGonFace,
-		count: number,
-		up: Vector3?,
-		right: Vector3?
-	): { RectangleFace }
-		local normal = Face.ConcaveNGon.normal(face)
-		up = upFromNormal(normal, right)
-		right = rightFromNormal(normal)
-
-		return {}
-	end
-
 	function Face.ConcaveNGon.vertices(face: ConcaveNGonFace): { VertexPoint }
 		return table.clone(face.Vertices)
 	end
@@ -731,12 +749,40 @@ do
 		return Face.Triangle.isWithin(face.T1, point) or Face.Triangle.isWithin(face.T2, point)
 	end
 
-	function Face.Quad.fitIn(face: QuadFace, count: number, up: Vector3?, right: Vector3?): { RectangleFace }
+	function Face.Quad.tile(face: QuadFace, format: TileFormat, up: Vector3?, right: Vector3?): { Face }
+		print(`tile`)
 		local normal = Face.Quad.normal(face)
-		up = upFromNormal(normal, right)
-		right = rightFromNormal(normal)
+		up = up or upFromNormal(normal, right)
+		assert(up, `bad up`)
+		right = right or rightFromNormal(normal)
+		assert(right, `bad right`)
+		up = right:Cross(-normal).Unit
+		right = up:Cross(-normal).Unit
 
-		return {}
+		local out: { Face } = {}
+
+		local t1Format = format
+		local t2Format = format
+
+		if format.Type == "Rows" and format.Width.Type == "Count" then
+			local t1Size = Face.Triangle.magnitude(face.T1)
+			local t2Size = Face.Triangle.magnitude(face.T2)
+			local totalSize = t1Size + t2Size
+			local t1Count = math.round(format.Width.Value * t1Size / totalSize)
+			local t2Count = math.max(0, format.Width.Value - t1Count)
+			t1Format = TableUtil.deepCopy(t1Format) :: typeof(format)
+			assert(t1Format.Width.Type == "Count", `bad width`)
+			t1Format.Width.Value = t1Count + 1
+
+			t2Format = TableUtil.deepCopy(t2Format) :: typeof(format)
+			assert(t2Format.Width.Type == "Count", `bad width`)
+			t2Format.Width.Value = t2Count + 1
+		end
+
+		Util.join(out, Face.Triangle.tile(face.T1, t1Format, up, right))
+		Util.join(out, Face.Triangle.tile(face.T2, t2Format, up, right))
+
+		return out
 	end
 
 	function Face.Quad.vertices(face: QuadFace): { VertexPoint }
@@ -799,16 +845,22 @@ do
 		return subModule.center(face)
 	end
 
-	function Face.Any.fitIn(face: Face): { RectangleFace }
+	function Face.Any.fit(face: Face, containmentType: ContainmentType, up: Vector3?, right: Vector3?): Face
 		local subModule = Face[face.Type] :: any
-		assert(subModule.fitIn, `missing fitIn for type "{face.Type}"`)
-		return subModule.fitIn(face)
+		assert(subModule.fit, `missing fit for type "{face.Type}"`)
+		return subModule.fit(face, containmentType, up, right)
 	end
 
 	function Face.Any.magnitude(face: Face): number
 		local subModule = Face[face.Type] :: any
 		assert(subModule.magnitude, `missing magnitude for type "{face.Type}"`)
 		return subModule.magnitude(face)
+	end
+
+	function Face.Any.tile(face: Face, format: TileFormat, up: Vector3?, right: Vector3?): { Face }
+		local subModule = Face[face.Type] :: any
+		assert(subModule.tile, `missing tile for type "{face.Type}"`)
+		return subModule.tile(face, format, up, right)
 	end
 
 	function Face.Any.isWithin(face: Face, point: Vector3): boolean
