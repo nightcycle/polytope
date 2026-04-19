@@ -63,6 +63,11 @@ do
 			if ENV.DEBUG_PARTS_LOCKED then
 				newLine.Locked = true
 			end
+			for i, child in newLine:GetDescendants() do
+				if child:IsA("BasePart") then
+					child.Locked = true
+				end
+			end
 			table.insert(out, newLine)
 		end
 		return out

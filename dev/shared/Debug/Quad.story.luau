@@ -17,10 +17,10 @@ return function()
 	end)
 	local instList: { Instance } = {}
 	local cleanUp = Osiris:Connect(function()
-		local p1 = Osiris.State(CFrame.new(Vector3.zero))
-		local p2 = Osiris.State(Vector3.one + Vector3.new(10, 0, 0))
-		local p3 = Osiris.State(CFrame.new(Vector3.one + Vector3.new(10, 0, 10)))
-		local p4 = Osiris.State(Vector3.one + Vector3.new(0, 0, 10))
+		local p1 = Controllers.Osiris.SavedState(`{script.Name}/P1`, CFrame.new(Vector3.zero))
+		local p2 = Controllers.Osiris.SavedState(`{script.Name}/P2`, Vector3.one + Vector3.new(10, 0, 0))
+		local p3 = Controllers.Osiris.SavedState(`{script.Name}/P3`, CFrame.new(Vector3.one + Vector3.new(10, 0, 10)))
+		local p4 = Controllers.Osiris.SavedState(`{script.Name}/P4`, Vector3.one + Vector3.new(0, 0, 10))
 
 		local widget = Osiris.Widget.Text({
 			Arguments = {

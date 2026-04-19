@@ -70,6 +70,19 @@ end
 
 Module.Osiris = {}
 
+Module.Osiris.SavedState = function<V>(key: string, initial: V): Osiris.State<V>
+	local attrKey = `SAVEDSTATE_{key}`
+	local savedInitial = workspace:GetAttribute(attrKey)
+	if savedInitial ~= nil and typeof(savedInitial) == typeof(initial) then
+		initial = savedInitial :: any
+	end
+	local state = Osiris.State(initial)
+	if state:changed() then
+		workspace:SetAttribute(attrKey, state:get())
+	end
+	return state
+end
+
 Module.Osiris.Position = {}
 
 Module.Osiris.PositionInput = function(props: {

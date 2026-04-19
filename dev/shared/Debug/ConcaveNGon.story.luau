@@ -4,6 +4,7 @@
 local Package = require(game.ReplicatedStorage.Packages.package)
 local Osiris = require(game.ReplicatedStorage.DevPackages.Osiris)
 -- Modules
+local Controllers = require(game.ReplicatedStorage.Shared.Controllers)
 -- Types
 -- Constants
 -- Variables
@@ -15,9 +16,9 @@ return function(frame)
 		Osiris.Init(game:GetService("CoreGui"), nil, false)
 	end)
 	local instList: { Instance } = {}
-	local cleanUp = Osiris:Connect(function()
-		local pointNumber = Osiris.State(8)
-		local height = Osiris.State(0)
+	local cleanUp = Osiris:Connect(function(): ()
+		local pointNumber = Controllers.Osiris.SavedState(`{script.Name}/PointNumber`, 8)
+		local height = Controllers.Osiris.SavedState(`{script.Name}/Height`, 0)
 
 		local didChange = false
 		Osiris.Widget.Window({
