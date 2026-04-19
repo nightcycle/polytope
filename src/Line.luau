@@ -54,6 +54,28 @@ do
 		return line.Offset.Magnitude
 	end
 
+	function Line.Straight.intersection(a: StraightLine, b: StraightLine): Vector3?
+		local p = a.P1.Position
+		local r = a.Offset
+		local q = b.P1.Position
+		local s = b.Offset
+
+		local rxs = r.X * s.Z - r.Z * s.X
+		if math.abs(rxs) < 1e-9 then
+			return nil -- parallel or collinear
+		end
+
+		local qp = q - p
+		local t = (qp.X * s.Z - qp.Z * s.X) / rxs
+		local u = (qp.X * r.Z - qp.Z * r.X) / rxs
+
+		if t >= 0 and t <= 1 and u >= 0 and u <= 1 then
+			return p + r * t
+		end
+
+		return nil
+	end
+
 	function Line.Straight.debug(line: StraightLine): { Instance }
 		local out: { Instance } = {}
 		Util.join(out, Point.Any.debug(line.P1))
@@ -71,6 +93,14 @@ do
 			table.insert(out, newLine)
 		end
 		return out
+	end
+
+	function Line.Straight.pointAtOffset(line: StraightLine, offset: number): Vector3
+		return line.P1.Position + line.Offset.Unit * math.clamp(offset, 0, line.Offset.Magnitude)
+	end
+
+	function Line.Straight.pointAt(line: StraightLine, t: number): Vector3
+		return line.P1.Position + line.Offset * math.clamp(t, 0, 1)
 	end
 end
 
@@ -120,6 +150,21 @@ do
 		Util.join(out, Point.Any.debug(line.P2))
 		return out
 	end
+
+	function Line.QuadraticBezier.pointAt(line: QuadraticBezierLine, t: number): Vector3
+		local u = 1 - t
+		return u * u * line.P1.Position + 2 * u * t * line.Intersection.Position + t * t * line.P2.Position
+	end
+
+	function Line.QuadraticBezier.pointAtOffset(line: QuadraticBezierLine, offset: number): Vector3
+		local len = Line.QuadraticBezier.magnitude(line)
+		return Line.QuadraticBezier.pointAt(line, math.clamp(offset, 0, len) / len)
+	end
+
+	function Line.QuadraticBezier.intersection(a: QuadraticBezierLine, other: Line): Vector3?
+		warn(`QuadraticBezier does not currently support intersection()`)
+		return nil
+	end
 end
 
 export type Line = StraightLine | QuadraticBezierLine
@@ -142,6 +187,24 @@ do
 		local subModule = Line[line.Type] :: any
 		assert(subModule.debug, `missing debug for type "{line.Type}"`)
 		return subModule.debug(line)
+	end
+
+	function Line.Any.pointAt(line: Line, t: number): Vector3
+		local subModule = Line[line.Type] :: any
+		assert(subModule.pointAt, `missing pointAt for type "{line.Type}"`)
+		return subModule.pointAt(line, t)
+	end
+
+	function Line.Any.pointAtOffset(line: Line, offset: number): Vector3
+		local subModule = Line[line.Type] :: any
+		assert(subModule.pointAtOffset, `missing pointAtOffset for type "{line.Type}"`)
+		return subModule.pointAtOffset(line, offset)
+	end
+
+	function Line.Any.intersection(a: Line, b: Line): Vector3?
+		local subModule = Line[a.Type] :: any
+		assert(subModule.intersection, `missing pointAtOffset for type "{a.Type}"`)
+		return subModule.intersection(a,b)
 	end
 end
 
