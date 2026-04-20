@@ -122,7 +122,6 @@ function tileRowsByStraightEdgeHits(
 	maxRect: RectangleFace,
 	format: TileFormat,
 	edges: { Line.StraightLine },
-	center: Vector3,
 	normal: Vector3,
 	up: Vector3,
 	right: Vector3
@@ -140,6 +139,7 @@ function tileRowsByStraightEdgeHits(
 		error(`unsupported type: "{format.Width.Type}"`)
 	end
 	local halfHeight = maxRect.Height / 2
+	local center = maxRect.Center.Position
 	local cf = CFrame.lookAlong(center, normal, up)
 
 	local function getHits(pos: Vector3, offset: Vector3): { Vector3 }
@@ -194,7 +194,7 @@ function tileRowsByStraightEdgeHits(
 				continue
 			end
 			local xMax = (i + 1) * actualColumnWidth - halfWidth
-			local yRange2 = solveSlice(xMax) --aor NumberRange.new(-halfHeight,halfHeight)
+			local yRange2 = solveSlice(xMax) -- or NumberRange.new(-halfHeight,halfHeight)
 			if not yRange2 then
 				continue
 			end
@@ -238,11 +238,11 @@ function tileRowsByStraightEdgeHits(
 		local dif = math.abs(format.Width.Value - #out)
 		if format.Width.Value < #out then
 			newWidth.Value -= dif
-			return tileRowsByStraightEdgeHits(maxRect, newFormat, edges, center, normal, up, right)
+			return tileRowsByStraightEdgeHits(maxRect, newFormat, edges, normal, up, right)
 		else
 			newWidth.Value += dif
 			newWidth.Value = math.max(newWidth.Value, 1)
-			return tileRowsByStraightEdgeHits(maxRect, newFormat, edges, center, normal, up, right)
+			return tileRowsByStraightEdgeHits(maxRect, newFormat, edges, normal, up, right)
 		end
 	end
 
@@ -307,7 +307,7 @@ do
 			local center = Face.Rectangle.center(face)
 			local maxRect = Face.Rectangle.fit(face, "Rectangle", up, right)
 			assert(maxRect.Type == "Rectangle", `bad maxRect`)
-			return tileRowsByStraightEdgeHits(maxRect, format, edges, center, normal, up, right)
+			return tileRowsByStraightEdgeHits(maxRect, format, edges, normal, up, right)
 		else
 			error(`unsupported format: "{format.Type}"`)
 		end
@@ -556,7 +556,7 @@ do
 			local maxRect = Face.Triangle.fit(face, "Rectangle", up, right)
 			assert(maxRect.Type == "Rectangle", `bad maxRect`)
 			local edges = Face.Triangle.edges(face)
-			return tileRowsByStraightEdgeHits(maxRect, format, edges, center, normal, up, right)
+			return tileRowsByStraightEdgeHits(maxRect, format, edges, normal, up, right)
 		else
 			error(`unsupported format: "{format.Type}"`)
 		end
@@ -768,7 +768,7 @@ do
 				local maxRect = Face.RegularNGon.fit(face, "Rectangle", up, right)
 				assert(maxRect.Type == "Rectangle", `bad maxRect`)
 				local edges = Face.RegularNGon.edges(face)
-				return tileRowsByStraightEdgeHits(maxRect, format, edges, center, normal, up, right)
+				return tileRowsByStraightEdgeHits(maxRect, format, edges, normal, up, right)
 			end
 		else
 			error(`unsupported format: "{format.Type}"`)
@@ -957,7 +957,8 @@ do
 				local center = Face.Quad.center(face)
 				local maxRect = Face.Quad.fit(face, "Rectangle", up, right)
 				assert(maxRect.Type == "Rectangle", `bad maxRect`)
-				return tileRowsByStraightEdgeHits(maxRect, format, edges, center, normal, up, right)
+				return tileRowsByStraightEdgeHits(maxRect, format, edges, normal, up, right)
+				-- return {maxRect}
 			end
 		else
 			error(`unsupported format: "{format.Type}"`)
