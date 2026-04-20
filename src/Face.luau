@@ -160,11 +160,11 @@ function tileRowsByStraightEdgeHits(
 			if #lineHits < 2 then
 				return nil
 			end
-			local uniquePoints: {Vector3} = {}
+			local uniquePoints: { Vector3 } = {}
 			for i, hit in lineHits do
 				local allUnique = true
 				for j, v in uniquePoints do
-					if (hit-v).Magnitude < CONSTANTS.FUZZY_EQ.LENGTH then
+					if (hit - v).Magnitude < CONSTANTS.FUZZY_EQ.LENGTH then
 						allUnique = false
 						break
 					end
@@ -175,6 +175,8 @@ function tileRowsByStraightEdgeHits(
 			end
 			if #uniquePoints == 2 then
 				lineHits = uniquePoints
+			else
+				return nil
 			end
 		end
 		local offsetY1 = cf:PointToObjectSpace(lineHits[1]).Y
@@ -286,7 +288,7 @@ do
 	): Face
 		local normal = Face.Rectangle.normal(face)
 		local center = Face.Rectangle.center(face)
-		up, right = fixAdjNormals(normal, up, right)
+		up, right = fixAdjNormals(normal, up or Face.Rectangle.up(face), right or Face.Rectangle.right(face))
 		assert(up and right, `bad normals`)
 		if containmentType == "Rectangle" then
 			local rectCF, width, height =
@@ -299,12 +301,11 @@ do
 
 	function Face.Rectangle.tile(face: RectangleFace, format: TileFormat, up: Vector3?, right: Vector3?): { Face }
 		local normal = Face.Rectangle.normal(face)
-		up, right = fixAdjNormals(normal, up, right)
+		up, right = fixAdjNormals(normal, up or Face.Rectangle.up(face), right or Face.Rectangle.right(face))
 		assert(up and right, `bad normals`)
 
 		if format.Type == "Rows" then
 			local edges = Face.Rectangle.edges(face)
-			local center = Face.Rectangle.center(face)
 			local maxRect = Face.Rectangle.fit(face, "Rectangle", up, right)
 			assert(maxRect.Type == "Rectangle", `bad maxRect`)
 			return tileRowsByStraightEdgeHits(maxRect, format, edges, normal, up, right)
@@ -532,7 +533,7 @@ do
 	): Face
 		local normal = Face.Triangle.normal(face)
 		local center = Face.Triangle.center(face)
-		up, right = fixAdjNormals(normal, up, right)
+		up, right = fixAdjNormals(normal, up or Face.Triangle.up(face), right or Face.Triangle.right(face))
 		assert(up and right, `bad normals`)
 		if containmentType == "Rectangle" then
 			local rectCF, width, height = getMaxRect(CFrame.fromMatrix(center, right, up), Face.Triangle.vertices(face))
@@ -544,8 +545,7 @@ do
 
 	function Face.Triangle.tile(face: TriangleFace, format: TileFormat, up: Vector3?, right: Vector3?): { Face }
 		local normal = Face.Triangle.normal(face)
-		local center = Face.Triangle.center(face)
-		up, right = fixAdjNormals(normal, up, right)
+		up, right = fixAdjNormals(normal, up or Face.Triangle.up(face), right or Face.Triangle.right(face))
 		assert(up and right, `bad normals`)
 		if format.Type == "Rows" then
 			if format.Direction == Enum.FillDirection.Horizontal then
@@ -668,11 +668,11 @@ do
 	end
 
 	function Face.RegularNGon.up(face: RegularNGonFace): Vector3
-		return upFromNormal(Face.RegularNGon.normal(face))
+		return face.Center.CFrame.UpVector
 	end
 
 	function Face.RegularNGon.right(face: RegularNGonFace): Vector3
-		return rightFromNormal(Face.RegularNGon.normal(face))
+		return face.Center.CFrame.RightVector
 	end
 
 	function Face.RegularNGon.center(face: RegularNGonFace): Vector3
@@ -695,7 +695,7 @@ do
 	function Face.RegularNGon.tile(face: RegularNGonFace, format: TileFormat, up: Vector3?, right: Vector3?): { Face }
 		local normal = Face.RegularNGon.normal(face)
 		local center = Face.RegularNGon.center(face)
-		up, right = fixAdjNormals(normal, up, right)
+		up, right = fixAdjNormals(normal, up or Face.RegularNGon.up(face), right or Face.RegularNGon.right(face))
 		assert(up and right, `bad normals`)
 		if format.Type == "Rows" then
 			if format.Direction == Enum.FillDirection.Horizontal then
@@ -783,7 +783,7 @@ do
 	): Face
 		local normal = Face.RegularNGon.normal(face)
 		local center = Face.RegularNGon.center(face)
-		up, right = fixAdjNormals(normal, up, right)
+		up, right = fixAdjNormals(normal, up or Face.RegularNGon.up(face), right or Face.RegularNGon.right(face))
 		assert(up and right, `bad normals`)
 		if containmentType == "Rectangle" then
 			local cf = CFrame.fromMatrix(center, right, up)
@@ -913,7 +913,7 @@ do
 
 	function Face.Quad.fit(face: QuadFace, containmentType: ContainmentType, up: Vector3?, right: Vector3?): Face
 		local normal = Face.Quad.normal(face)
-		up, right = fixAdjNormals(normal, up, right)
+		up, right = fixAdjNormals(normal, up or Face.Quad.up(face), right or Face.Quad.right(face))
 		assert(up and right, `bad normals`)
 		local center = Face.Quad.center(face)
 		if containmentType == "Rectangle" then
@@ -926,7 +926,7 @@ do
 
 	function Face.Quad.tile(face: QuadFace, format: TileFormat, up: Vector3?, right: Vector3?): { Face }
 		local normal = Face.Quad.normal(face)
-		up, right = fixAdjNormals(normal, up, right)
+		up, right = fixAdjNormals(normal, up or Face.Quad.up(face), right or Face.Quad.right(face))
 		assert(up and right, `bad normals`)
 
 		local out: { Face } = {}
@@ -954,11 +954,9 @@ do
 				Util.join(out, Face.Triangle.tile(face.T2, t2Format, up, right))
 			else
 				local edges = Face.Quad.edges(face)
-				local center = Face.Quad.center(face)
 				local maxRect = Face.Quad.fit(face, "Rectangle", up, right)
 				assert(maxRect.Type == "Rectangle", `bad maxRect`)
 				return tileRowsByStraightEdgeHits(maxRect, format, edges, normal, up, right)
-				-- return {maxRect}
 			end
 		else
 			error(`unsupported format: "{format.Type}"`)

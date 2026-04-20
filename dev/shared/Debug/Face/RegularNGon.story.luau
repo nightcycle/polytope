@@ -104,9 +104,9 @@ return function(frame)
 				Package.Face.RegularNGon.new(Package.Point.Rotated.new(cfState:get()), length:get(), pointNumber:get())
 			do
 				Package.ENV.DEBUG_SHOW_NORMALS = false
-				local n = Package.Face.Any.normal(face).Unit
-				local up = Vector3.zAxis:Cross(-n).Unit
-				local r = up:Cross(n).Unit
+				-- local n = Package.Face.Any.normal(face).Unit
+				-- local up = Vector3.zAxis:Cross(-n).Unit
+				-- local r = up:Cross(n).Unit
 				for i, rect in
 					Package.Face.Any.tile(face, {
 						Type = "Rows",
@@ -115,7 +115,7 @@ return function(frame)
 							Value = rowCount:get(),
 							RetryOnceIfNotExact = true,
 						},
-					}, up, r)
+					})--, up, r)
 				do
 					local rectInsts = Package.Face.Any.debug(rect)
 					Package.Debug.color(rectInsts, Color3.new(1, 0.5, 0), "Part")
