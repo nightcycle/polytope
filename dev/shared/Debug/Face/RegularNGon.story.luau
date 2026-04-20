@@ -17,11 +17,30 @@ return function(frame)
 	end)
 	local instList: { Instance } = {}
 	local cleanUp = Osiris:Connect(function(): ()
-		local pointNumber = Controllers.Osiris.SavedState(`{script.Name}/PointNumber`, 6)
-		local length = Controllers.Osiris.SavedState(`{script.Name}/Length`, 50)
-		local windowSize = Controllers.Osiris.SavedState(`{script.Name}/ControlSize`, Vector2.new(150, 100))
+		local widget = Osiris.Widget.Text({
+			Arguments = {
+				Text = script.Name,
+			},
+		})
 
 		local didChange = false
+
+		local pointNumber = Controllers.Osiris.SavedState(`{script.Name}/PointNumber`, 6)
+		local length = Controllers.Osiris.SavedState(`{script.Name}/Length`, 50)
+		local rowCount = Controllers.Osiris.SavedState(`{script.Name}/Rows`, 6)
+		local windowSize = Controllers.Osiris.SavedState(`{script.Name}/ControlSize`, Vector2.new(150, 100))
+		local cfState = Controllers.Osiris.SavedState(`{script.Name}/CFrame`, CFrame.new(Vector3.zero))
+		do
+			Controllers.Osiris.CFrameInput({
+				Arguments = { Size = 2, Color = Color3.new(0, 0, 1) },
+				States = { value = cfState },
+				Extra = { parent = widget },
+			})
+			if cfState:changed() then
+				didChange = true
+			end
+		end
+
 		Osiris.Widget.Window({
 			Arguments = {
 				Title = "Controls",
@@ -49,6 +68,21 @@ return function(frame)
 				Osiris.Widget
 					.SliderNum({
 						Arguments = {
+							Text = "Rows",
+							Min = 1,
+						},
+						States = {
+							number = rowCount,
+						},
+					})
+					.numberChanged()
+			then
+				didChange = true
+			end
+			if
+				Osiris.Widget
+					.SliderNum({
+						Arguments = {
 							Text = "Length",
 							Min = 1,
 						},
@@ -66,8 +100,32 @@ return function(frame)
 			for i, v in instList do
 				v:Destroy()
 			end
-			local face = Package.Face.RegularNGon.new(Package.Point.Rotated.new(CFrame.new(0,10,0)), length:get(), pointNumber:get())
-			instList = Package.Face.Any.debug(face)
+			local face =
+				Package.Face.RegularNGon.new(Package.Point.Rotated.new(cfState:get()), length:get(), pointNumber:get())
+			do
+				Package.ENV.DEBUG_SHOW_NORMALS = false
+				local n = Package.Face.Any.normal(face).Unit
+				local up = Vector3.zAxis:Cross(-n).Unit
+				local r = up:Cross(n).Unit
+				for i, rect in
+					Package.Face.Any.tile(face, {
+						Type = "Rows",
+						Width = {
+							Type = "Count",
+							Value = rowCount:get(),
+							RetryOnceIfNotExact = true,
+						},
+					}, up, r)
+				do
+					local rectInsts = Package.Face.Any.debug(rect)
+					Package.Debug.color(rectInsts, Color3.new(1, 0.5, 0), "Part")
+					Package.Debug.color(rectInsts, Color3.new(1, 1, 0), "Line")
+					Package.Debug.transparency(rectInsts, 0, "Line")
+					Package.Util.join(instList, rectInsts)
+				end
+				Package.ENV.DEBUG_SHOW_NORMALS = true
+			end
+			Package.Util.join(instList, Package.Face.Any.debug(face))
 			Package.Debug.lock(instList, true)
 		end
 	end)

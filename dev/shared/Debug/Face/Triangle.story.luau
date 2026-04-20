@@ -20,6 +20,7 @@ return function()
 		local p1 = Controllers.Osiris.SavedState(`{script.Name}/P1`, CFrame.new(Vector3.one + Vector3.new(10, 0, 0)))
 		local p2 = Controllers.Osiris.SavedState(`{script.Name}/P2`, CFrame.new(Vector3.one + Vector3.new(0, 5, 10)))
 		local p3 = Controllers.Osiris.SavedState(`{script.Name}/P3`, CFrame.new(Vector3.one + Vector3.new(2, 3, 2)))
+		local rowCount = Controllers.Osiris.SavedState(`{script.Name}/Rows`, 6)
 
 		local widget = Osiris.Widget.Text({
 			Arguments = {
@@ -38,6 +39,31 @@ return function()
 				didChange = true
 			end
 		end
+		local windowSize = Controllers.Osiris.SavedState(`{script.Name}/ControlSize`, Vector2.new(150, 100))
+		Osiris.Widget.Window({
+			Arguments = {
+				Title = "Controls",
+			},
+			States = {
+				size = windowSize,
+			},
+		}, function(_)
+			if
+				Osiris.Widget
+					.SliderNum({
+						Arguments = {
+							Text = "Rows",
+							Min = 1,
+						},
+						States = {
+							number = rowCount,
+						},
+					})
+					.numberChanged()
+			then
+				didChange = true
+			end
+		end)
 		if didChange or #instList == 0 then
 			for i, v in instList do
 				v:Destroy()
@@ -58,15 +84,17 @@ return function()
 				Package.ENV.DEBUG_SHOW_NORMALS = false
 				local n = Package.Face.Any.normal(face).Unit
 				local up = Vector3.zAxis:Cross(-n).Unit
-				local r = nil--up:Cross(n).Unit
-				for i, rect in Package.Face.Any.tile(face, {
-					Type = "Rows",
-					Width = {
-						Type = "Count",
-						Value = 5,
-						RetryOnceIfNotExact = true
-					},
-				}, up, r) do
+				local r = nil --up:Cross(n).Unit
+				for i, rect in
+					Package.Face.Any.tile(face, {
+						Type = "Rows",
+						Width = {
+							Type = "Count",
+							Value = rowCount:get(),
+							RetryOnceIfNotExact = true,
+						},
+					}, up, r)
+				do
 					local rectInsts = Package.Face.Any.debug(rect)
 					Package.Debug.color(rectInsts, Color3.new(1, 0.5, 0), "Part")
 					Package.Debug.color(rectInsts, Color3.new(1, 1, 0), "Line")

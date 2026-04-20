@@ -21,6 +21,7 @@ return function()
 		local p2 = Controllers.Osiris.SavedState(`{script.Name}/P2`, Vector3.one + Vector3.new(10, 0, 0))
 		local p3 = Controllers.Osiris.SavedState(`{script.Name}/P3`, CFrame.new(Vector3.one + Vector3.new(10, 0, 10)))
 		local p4 = Controllers.Osiris.SavedState(`{script.Name}/P4`, Vector3.one + Vector3.new(0, 0, 10))
+		local rowCount = Controllers.Osiris.SavedState(`{script.Name}/Rows`, 6)
 
 		local widget = Osiris.Widget.Text({
 			Arguments = {
@@ -47,7 +48,31 @@ return function()
 				didChange = true
 			end
 		end
-
+		local windowSize = Controllers.Osiris.SavedState(`{script.Name}/ControlSize`, Vector2.new(150, 100))
+		Osiris.Widget.Window({
+			Arguments = {
+				Title = "Controls",
+			},
+			States = {
+				size = windowSize,
+			},
+		}, function(_)
+			if
+				Osiris.Widget
+					.SliderNum({
+						Arguments = {
+							Text = "Rows",
+							Min = 1,
+						},
+						States = {
+							number = rowCount,
+						},
+					})
+					.numberChanged()
+			then
+				didChange = true
+			end
+		end)
 		if didChange or #instList == 0 then
 			for i, v in instList do
 				v:Destroy()
@@ -68,7 +93,7 @@ return function()
 						Type = "Rows",
 						Width = {
 							Type = "Count",
-							Value = 8,
+							Value = rowCount:get(),
 							RetryOnceIfNotExact = true,
 						},
 					}, up, r)

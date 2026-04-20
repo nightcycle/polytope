@@ -37,6 +37,7 @@ return function()
 			end
 		end
 		local widthState = Controllers.Osiris.SavedState(`{script.Name}/Width`, 3)
+		local rowCount = Controllers.Osiris.SavedState(`{script.Name}/Rows`, 6)
 		local heightState = Controllers.Osiris.SavedState(`{script.Name}/Height`, 3)
 		local windowSize = Controllers.Osiris.SavedState(`{script.Name}/ControlSize`, Vector2.new(150, 100))
 
@@ -57,6 +58,21 @@ return function()
 						},
 						States = {
 							number = widthState,
+						},
+					})
+					.numberChanged()
+			then
+				didChange = true
+			end
+			if
+				Osiris.Widget
+					.SliderNum({
+						Arguments = {
+							Text = "Rows",
+							Min = 1,
+						},
+						States = {
+							number = rowCount,
 						},
 					})
 					.numberChanged()
@@ -99,7 +115,7 @@ return function()
 						Type = "Rows",
 						Width = {
 							Type = "Count",
-							Value = 8,
+							Value = rowCount:get(),
 							RetryOnceIfNotExact = true,
 						},
 					}, up, r)

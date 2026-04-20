@@ -157,7 +157,25 @@ function tileRowsByStraightEdgeHits(
 	local function solveSlice(offsetX: number): NumberRange?
 		local lineHits = getHits(center + right * offsetX - up * halfHeight, up * maxRect.Height)
 		if #lineHits ~= 2 then
-			return nil
+			if #lineHits < 2 then
+				return nil
+			end
+			local uniquePoints: {Vector3} = {}
+			for i, hit in lineHits do
+				local allUnique = true
+				for j, v in uniquePoints do
+					if (hit-v).Magnitude < CONSTANTS.FUZZY_EQ.LENGTH then
+						allUnique = false
+						break
+					end
+				end
+				if allUnique then
+					table.insert(uniquePoints, hit)
+				end
+			end
+			if #uniquePoints == 2 then
+				lineHits = uniquePoints
+			end
 		end
 		local offsetY1 = cf:PointToObjectSpace(lineHits[1]).Y
 		local offsetY2 = cf:PointToObjectSpace(lineHits[2]).Y
@@ -187,7 +205,13 @@ function tileRowsByStraightEdgeHits(
 			local yMax = math.min(yRange1.Max, yRange2.Max)
 
 			local rHeight = yMax - yMin
+			if rHeight < CONSTANTS.FUZZY_EQ.LENGTH then
+				continue
+			end
 			local rWidth = xMax - xMin
+			if rWidth < CONSTANTS.FUZZY_EQ.LENGTH then
+				continue
+			end
 
 			table.insert(
 				out,
@@ -278,7 +302,6 @@ do
 		up, right = fixAdjNormals(normal, up, right)
 		assert(up and right, `bad normals`)
 
-		local out: { Face } = {}
 		if format.Type == "Rows" then
 			local edges = Face.Rectangle.edges(face)
 			local center = Face.Rectangle.center(face)
@@ -288,8 +311,6 @@ do
 		else
 			error(`unsupported format: "{format.Type}"`)
 		end
-
-		return out
 	end
 
 	function Face.Rectangle.fill(face: RectangleFace, fill: FillInfo, rng: Random?): FillResult
@@ -521,7 +542,6 @@ do
 		end
 	end
 
-	-- https://www.sunshine2k.de/coding/java/TriangleRasterization/TriangleRasterization.html
 	function Face.Triangle.tile(face: TriangleFace, format: TileFormat, up: Vector3?, right: Vector3?): { Face }
 		local normal = Face.Triangle.normal(face)
 		local center = Face.Triangle.center(face)
@@ -575,8 +595,8 @@ do
 		for i = 1, sideCount do
 			local angle = math.rad((i - 1) * 360 / sideCount)
 			vertices[i] = Point.Vertex.new(
-				Vector3.new(math.sin(angle) * diameter / 2, 10, math.cos(angle) * diameter / 2),
-				Vector3.yAxis
+				(center.CFrame * CFrame.new(math.sin(angle) * diameter / 2, math.cos(angle) * diameter / 2, 0)).Position,
+				center.Normal
 			)
 		end
 
@@ -672,11 +692,117 @@ do
 		return false
 	end
 
+	function Face.RegularNGon.tile(face: RegularNGonFace, format: TileFormat, up: Vector3?, right: Vector3?): { Face }
+		local normal = Face.RegularNGon.normal(face)
+		local center = Face.RegularNGon.center(face)
+		up, right = fixAdjNormals(normal, up, right)
+		assert(up and right, `bad normals`)
+		if format.Type == "Rows" then
+			if format.Direction == Enum.FillDirection.Horizontal then
+				local newFormat: TileFormat = table.clone(format)
+				newFormat.Direction = Enum.FillDirection.Vertical
+				return Face.RegularNGon.tile(face, newFormat, up, -(right:Cross(up)))
+			end
+			if face.SideCount > CONSTANTS.NGON_IS_CIRCLE_AFTER then
+				local out = {}
+				local apothem = (face.Diameter / 2) * math.cos(math.pi / face.SideCount)
+				local doubleApothem = apothem * 2
+				local columnWidth: number
+				if format.Width.Type == "Count" then
+					if format.Width.Value <= 0 then
+						return {} -- done :D
+					end
+					columnWidth = doubleApothem / (format.Width.Value + 2)
+				elseif format.Width.Type == "Length" then
+					columnWidth = format.Width.Value
+				else
+					error(`unsupported type: "{format.Width.Type}"`)
+				end
+				local count = math.floor(doubleApothem / columnWidth)
+				local cf = CFrame.lookAlong(center, normal, up)
+
+				local actualColumnWidth = doubleApothem / count
+				local halfWidth = apothem
+				for i = 0, count - 1 do
+					local xMin = i * actualColumnWidth - halfWidth
+					local angle1 = math.acos(xMin / apothem)
+					local y1 = math.abs(math.sin(angle1) * apothem)
+					if y1 ~= y1 then
+						y1 = 0
+					end
+					local xMax = (i + 1) * actualColumnWidth - halfWidth
+
+					local angle2 = math.acos(xMax / apothem)
+					local y2 = math.abs(math.sin(angle2) * apothem)
+					if y2 ~= y2 then
+						y2 = 0
+					end
+
+					local yMin = math.min(y1, y2)
+
+					local rHeight = 2 * yMin
+					local rWidth = xMax - xMin
+
+					if rHeight < CONSTANTS.FUZZY_EQ.LENGTH then
+						continue
+					end
+
+					table.insert(
+						out,
+						Face.Rectangle.new(
+							Point.Rotated.new(
+								CFrame.fromMatrix(
+									cf.Position + (xMin + rWidth / 2) * right,
+									cf.XVector,
+									cf.YVector,
+									cf.ZVector
+								)
+							),
+							rHeight,
+							rWidth
+						)
+					)
+				end
+				return out
+			else
+				local maxRect = Face.RegularNGon.fit(face, "Rectangle", up, right)
+				assert(maxRect.Type == "Rectangle", `bad maxRect`)
+				local edges = Face.RegularNGon.edges(face)
+				return tileRowsByStraightEdgeHits(maxRect, format, edges, center, normal, up, right)
+			end
+		else
+			error(`unsupported format: "{format.Type}"`)
+		end
+	end
+
+	function Face.RegularNGon.fit(
+		face: RegularNGonFace,
+		containmentType: ContainmentType,
+		up: Vector3?,
+		right: Vector3?
+	): Face
+		local normal = Face.RegularNGon.normal(face)
+		local center = Face.RegularNGon.center(face)
+		up, right = fixAdjNormals(normal, up, right)
+		assert(up and right, `bad normals`)
+		if containmentType == "Rectangle" then
+			local cf = CFrame.fromMatrix(center, right, up)
+			if face.SideCount > CONSTANTS.NGON_IS_CIRCLE_AFTER then
+				return Face.Rectangle.new(Point.Rotated.new(cf), face.Diameter, face.Diameter)
+			else
+				local rectCF, width, height = getMaxRect(cf, Face.RegularNGon.vertices(face))
+				return Face.Rectangle.new(Point.Rotated.new(rectCF), height, width)
+			end
+		else
+			error(`unsupported containment type: "{containmentType}"`)
+		end
+	end
+
 	function Face.RegularNGon.vertices(face: RegularNGonFace): { VertexPoint }
 		return table.clone(face.Vertices)
 	end
 
-	function Face.RegularNGon.edges(face: RegularNGonFace): { Line }
+	function Face.RegularNGon.edges(face: RegularNGonFace): { Line.StraightLine }
 		local priorI = #face.Vertices
 		local out = {}
 		for i = 1, #face.Vertices do

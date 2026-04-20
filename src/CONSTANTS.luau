@@ -14,5 +14,6 @@ return {
 		LENGTH = 0.001,
 		AREA = 0.001^2,
 		EPSILON = 0.001,
-	}
+	},
+	NGON_IS_CIRCLE_AFTER = 12,
 }
