@@ -66,19 +66,6 @@ export type TileFormat =
 	}
 
 export type ContainmentType = "Rectangle"
-export type FillInfo =
-	{
-		Type: "Surface",
-		Thickness: number?,
-	}
-	| {
-		Type: "Stripes",
-		Count: number,
-		PerLine: number,
-		Decoration: DecorationInfo,
-		Constructor: DecorationConstructor,
-		Direction: Enum.FillDirection,
-	}
 
 export type FillResult = {
 	Instances: { Instance },

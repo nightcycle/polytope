@@ -29,29 +29,25 @@ function Triangle.new(p1: Point.VertexPoint, p2: Point.VertexPoint, p3: Point.Ve
 	return face
 end
 
-function Triangle.fill(face: TriangleFace, fill: FaceUtil.FillInfo, rng: Random?): FaceUtil.FillResult
-	if fill.Type == "Surface" then
-		local a = InstanceCache.Class.WedgePart:allocate()
-		local b = InstanceCache.Class.WedgePart:allocate()
-		local aCF, bCF = Util.setTriangle(
-			face.P1.Position,
-			face.P2.Position,
-			face.P3.Position,
-			Triangle.normal(face),
-			fill.Thickness or CONSTANTS.MIN_THICKNESS,
-			a,
-			b
-		)
-		return {
-			Instances = { a, b },
-			Parts = {
-				[a] = aCF,
-				[b] = bCF,
-			},
-		}
-	else
-		error(`unsupported type: "{fill.Type}"`)
-	end
+function Triangle.fill(face: TriangleFace, thickness: number?): FaceUtil.FillResult
+	local a = InstanceCache.Class.WedgePart:allocate()
+	local b = InstanceCache.Class.WedgePart:allocate()
+	local aCF, bCF = Util.setTriangle(
+		face.P1.Position,
+		face.P2.Position,
+		face.P3.Position,
+		Triangle.normal(face),
+		thickness or CONSTANTS.MIN_THICKNESS,
+		a,
+		b
+	)
+	return {
+		Instances = { a, b },
+		Parts = {
+			[a] = aCF,
+			[b] = bCF,
+		},
+	}
 end
 
 function Triangle.normal(face: TriangleFace): Vector3

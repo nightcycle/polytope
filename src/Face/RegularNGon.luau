@@ -51,26 +51,22 @@ function RegularNGon.new(center: Point.RotatedPoint, diameter: number, sideCount
 	return face
 end
 
-function RegularNGon.fill(face: RegularNGonFace, fill: FaceUtil.FillInfo, rng: Random?): FaceUtil.FillResult
-	if fill.Type == "Surface" then
-		local instList = {}
-		local map = {}
-		for i, tri in face.Triangles do
-			local tResult = Triangle.fill(tri, fill, rng)
-			for i, inst in tResult.Instances do
-				table.insert(instList, inst)
-			end
-			for part, cf in tResult.Parts do
-				map[part] = cf
-			end
+function RegularNGon.fill(face: RegularNGonFace, thickness: number?): FaceUtil.FillResult
+	local instList = {}
+	local map = {}
+	for i, tri in face.Triangles do
+		local tResult = Triangle.fill(tri, thickness)
+		for i, inst in tResult.Instances do
+			table.insert(instList, inst)
 		end
-		return {
-			Instances = instList,
-			Parts = map,
-		}
-	else
-		error(`unsupported type: "{fill.Type}"`)
+		for part, cf in tResult.Parts do
+			map[part] = cf
+		end
 	end
+	return {
+		Instances = instList,
+		Parts = map,
+	}
 end
 
 function RegularNGon.eq(a: RegularNGonFace, b: RegularNGonFace): boolean

@@ -130,23 +130,19 @@ function Rectangle.tile(
 	end
 end
 
-function Rectangle.fill(face: RectangleFace, fill: FaceUtil.FillInfo, rng: Random?): FaceUtil.FillResult
-	if fill.Type == "Surface" then
-		local part = Instance.new("Part")
-		part.Size = Vector3.new(face.Width, face.Height, fill.Thickness or CONSTANTS.MIN_THICKNESS)
-		return {
-			Instances = { part },
-			Parts = {
-				[part] = CFrame.fromMatrix(
-					face.Center.Position - face.Center.Normal * part.Size.Z / 2,
-					face.Center.Up:Cross(-face.Center.Normal),
-					face.Center.Up
-				),
-			},
-		}
-	else
-		error(`unsupported type: "{fill.Type}"`)
-	end
+function Rectangle.fill(face: RectangleFace, thickness: number?): FaceUtil.FillResult
+	local part = Instance.new("Part")
+	part.Size = Vector3.new(face.Width, face.Height, thickness or CONSTANTS.MIN_THICKNESS)
+	return {
+		Instances = { part },
+		Parts = {
+			[part] = CFrame.fromMatrix(
+				face.Center.Position - face.Center.Normal * part.Size.Z / 2,
+				face.Center.Up:Cross(-face.Center.Normal),
+				face.Center.Up
+			),
+		},
+	}
 end
 
 function Rectangle.eq(a: RectangleFace, b: RectangleFace): boolean

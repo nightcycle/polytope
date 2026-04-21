@@ -21,15 +21,15 @@ export type Face = FaceUtil.Face
 -- Class
 local Any = {}
 
-function Any.fill(face: Face, fill: FaceUtil.FillInfo, rng: Random?): FaceUtil.FillResult
+function Any.fill(face: Face, thickness: number?): FaceUtil.FillResult
 	if face.Type == "Triangle" then
-		return Triangle.fill(face, fill, rng)
+		return Triangle.fill(face, thickness)
 	elseif face.Type == "Quad" then
-		return Quad.fill(face, fill, rng)
+		return Quad.fill(face, thickness)
 	elseif face.Type == "Rectangle" then
-		return Rectangle.fill(face, fill, rng)
+		return Rectangle.fill(face, thickness)
 	elseif face.Type == "RegularNGon" then
-		return RegularNGon.fill(face, fill, rng)
+		return RegularNGon.fill(face, thickness)
 	else
 		error(`bad type: "{face.Type}"`)
 	end
@@ -286,9 +286,7 @@ function Any.debug(face: Face): { Instance }
 		table.insert(out, Draw.vector(center, right * 3, Color3.new(1, 0, 0)))
 	end
 	if ENV.DEBUG_SHOW_FACES then
-		local result = Any.fill(face, {
-			Type = "Surface",
-		})
+		local result = Any.fill(face)
 		Util.join(out, result.Instances)
 		for i, inst in result.Instances do
 			inst.Parent = workspace.CurrentCamera

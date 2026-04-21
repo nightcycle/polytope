@@ -47,31 +47,27 @@ function Quad.center(face: QuadFace): Vector3
 	return face.T1.P2.Position:Lerp(face.T2.P2.Position, 0.5)
 end
 
-function Quad.fill(face: QuadFace, fill: FaceUtil.FillInfo, rng: Random?): FaceUtil.FillResult
-	if fill.Type == "Surface" then
-		local t1Result = Triangle.fill(face.T1, fill, rng)
-		local t2Result = Triangle.fill(face.T2, fill, rng)
-		local instList = {}
-		for i, inst in t1Result.Instances do
-			table.insert(instList, inst)
-		end
-		for i, inst in t2Result.Instances do
-			table.insert(instList, inst)
-		end
-		local map = {}
-		for part, cf in t1Result.Parts do
-			map[part] = cf
-		end
-		for part, cf in t2Result.Parts do
-			map[part] = cf
-		end
-		return {
-			Instances = instList,
-			Parts = map,
-		}
-	else
-		error(`unsupported type: "{fill.Type}"`)
+function Quad.fill(face: QuadFace, thickness: number?): FaceUtil.FillResult
+	local t1Result = Triangle.fill(face.T1, thickness)
+	local t2Result = Triangle.fill(face.T2, thickness)
+	local instList = {}
+	for i, inst in t1Result.Instances do
+		table.insert(instList, inst)
 	end
+	for i, inst in t2Result.Instances do
+		table.insert(instList, inst)
+	end
+	local map = {}
+	for part, cf in t1Result.Parts do
+		map[part] = cf
+	end
+	for part, cf in t2Result.Parts do
+		map[part] = cf
+	end
+	return {
+		Instances = instList,
+		Parts = map,
+	}
 end
 
 function Quad.eq(a: QuadFace, b: QuadFace): boolean
