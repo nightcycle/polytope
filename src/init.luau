@@ -3,6 +3,7 @@
 -- Packages
 -- Modules
 local FaceUtil = require(script.FaceUtil)
+local LineUtil = require(script.LineUtil)
 local PointUtil = require(script.PointUtil)
 
 -- Types
@@ -10,6 +11,9 @@ export type Point = PointUtil.Point
 export type BasicPoint = PointUtil.BasicPoint
 export type RotatedPoint = PointUtil.RotatedPoint
 export type VertexPoint = PointUtil.VertexPoint
+export type Line = LineUtil.Line
+export type QuadraticBezierLine = LineUtil.QuadraticBezierLine
+export type StraightLine = LineUtil.StraightLine
 export type Face = FaceUtil.Face
 export type RectangleFace = FaceUtil.RectangleFace
 export type QuadFace = FaceUtil.QuadFace
