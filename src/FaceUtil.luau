@@ -42,19 +42,28 @@ export type DecorationInfo = {
 	Translation: NumberRange?,
 }
 
-export type TileFormat = {
-	Type: "Rows",
-	Width: {
+export type TileScale =
+	{
 		Type: "Count",
 		Value: number,
 		RetryOnceIfNotExact: boolean?,
-	} | {
+	}
+	| {
 		Type: "Length",
 		Value: number,
-	},
-	SnapTo: number?,
-	Direction: Enum.FillDirection?,
-}
+	}
+export type TileFormat =
+	{
+		Type: "Rows",
+		Width: TileScale,
+		SnapTo: number?,
+		Direction: Enum.FillDirection?,
+	}
+	| {
+		Type: "Grid",
+		Width: TileScale,
+		Height: TileScale,
+	}
 
 export type ContainmentType = "Rectangle"
 export type FillInfo =
@@ -81,6 +90,7 @@ local CONSTANTS = require(script.Parent.CONSTANTS)
 -- Variables
 -- References
 -- Private Functions
+
 -- Class
 local Util = {}
 function Util.rightFromNormal(normal: Vector3): Vector3
@@ -128,7 +138,18 @@ function Util.getMaxRect(origin: CFrame, points: { Point.Point }): (CFrame, numb
 
 	return origin * CFrame.new(minX + width / 2, minY + height / 2, 0), width, height
 end
-
+function Util.solveTileScale(tileScale: TileScale, maxRectDim: number): number
+	if tileScale.Type == "Count" then
+		if tileScale.Value <= 0 then
+			return 0
+		end
+		return maxRectDim / (tileScale.Value + 2)
+	elseif tileScale.Type == "Length" then
+		return tileScale.Value
+	else
+		error(`unsupported type: "{tileScale.Type}"`)
+	end
+end
 function Util.tileRowsByStraightEdgeHits(
 	maxRect: RectangleFace,
 	format: TileFormat,
@@ -136,17 +157,11 @@ function Util.tileRowsByStraightEdgeHits(
 	normal: Vector3,
 	up: Vector3,
 	right: Vector3
-)
-	local columnWidth: number
-	if format.Width.Type == "Count" then
-		if format.Width.Value <= 0 then
-			return {} -- done :D
-		end
-		columnWidth = maxRect.Width / (format.Width.Value + 2)
-	elseif format.Width.Type == "Length" then
-		columnWidth = format.Width.Value
-	else
-		error(`unsupported type: "{format.Width.Type}"`)
+): { RectangleFace }
+	assert(format.Type == "Rows", `expected "Rows", got "{format.Type}"`)
+	local columnWidth = Util.solveTileScale(format.Width, maxRect.Width)
+	if columnWidth <= 0 then
+		return {} -- done :D
 	end
 	local halfHeight = maxRect.Height / 2
 	local center = maxRect.Center.CFrame.Position
@@ -215,10 +230,10 @@ function Util.tileRowsByStraightEdgeHits(
 			local yMax1 = yRange1.Max
 			local yMax2 = yRange2.Max
 			if format.SnapTo then
-				yMin1 = math.ceil(yMin1/format.SnapTo)*format.SnapTo
-				yMin2 = math.ceil(yMin2/format.SnapTo)*format.SnapTo
-				yMax1 = math.floor(yMax1/format.SnapTo)*format.SnapTo
-				yMax2 = math.floor(yMax2/format.SnapTo)*format.SnapTo
+				yMin1 = math.ceil(yMin1 / format.SnapTo) * format.SnapTo
+				yMin2 = math.ceil(yMin2 / format.SnapTo) * format.SnapTo
+				yMax1 = math.floor(yMax1 / format.SnapTo) * format.SnapTo
+				yMax2 = math.floor(yMax2 / format.SnapTo) * format.SnapTo
 			end
 			if yMax1 < yMin2 or yMin1 > yMax2 then
 				continue
@@ -270,6 +285,63 @@ function Util.tileRowsByStraightEdgeHits(
 		end
 	end
 
+	return out
+end
+
+function Util.gridFromRowsAndColumns(
+	cf: CFrame,
+	columns: { RectangleFace },
+	rows: { RectangleFace }
+): {
+	{
+		CFrame: CFrame,
+		Height: number,
+		Width: number,
+	}
+}
+	local out = {}
+
+	for x, column in columns do
+		local colOffset = cf:PointToObjectSpace(column.Center.CFrame.Position)
+
+		local colXHalfLength = column.Width / 2
+		local colXMin = colOffset.X - colXHalfLength
+		local colXMax = colOffset.X + colXHalfLength
+
+		local xOffset = colOffset.X
+
+		local colYHalfWidth = column.Height / 2
+		local colYMin = colOffset.Y - colYHalfWidth
+		local colYMax = colOffset.Y + colYHalfWidth
+
+		for y, row in rows do
+			local rowYOffset = cf:PointToObjectSpace(row.Center.CFrame.Position)
+
+			local yOffset = rowYOffset.Y
+
+			local rowYHalfLength = row.Width / 2
+			local rowYMin = rowYOffset.Y - rowYHalfLength
+			local rowYMax = rowYOffset.Y + rowYHalfLength
+
+			local rowXHalfWidth = row.Height / 2
+			local rowXMin = rowYOffset.X - rowXHalfWidth
+			local rowXMax = rowYOffset.X + rowXHalfWidth
+
+			if not (colXMin >= rowXMin and colXMax <= rowXMax) then
+				continue
+			end
+
+			if not (rowYMin >= colYMin and rowYMax <= colYMax) then
+				continue
+			end
+
+			table.insert(out, {
+				CFrame = cf * CFrame.new(xOffset, yOffset, 0),
+				Height = row.Width,
+				Width = column.Width,
+			})
+		end
+	end
 	return out
 end
 

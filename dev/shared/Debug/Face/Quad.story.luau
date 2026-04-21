@@ -22,7 +22,7 @@ return function()
 		local p3 = Controllers.Osiris.SavedState(`{script.Name}/P3`, CFrame.new(Vector3.one + Vector3.new(10, 0, 10)))
 		local p4 = Controllers.Osiris.SavedState(`{script.Name}/P4`, Vector3.one + Vector3.new(0, 0, 10))
 		local rowCount = Controllers.Osiris.SavedState(`{script.Name}/Rows`, 6)
-		local snapTo = Controllers.Osiris.SavedState(`{script.Name}/SnapTo`, 1)
+		-- local snapTo = Controllers.Osiris.SavedState(`{script.Name}/SnapTo`, 1)
 
 		local widget = Osiris.Widget.Text({
 			Arguments = {
@@ -73,21 +73,21 @@ return function()
 			then
 				didChange = true
 			end
-			if
-				Osiris.Widget
-					.SliderNum({
-						Arguments = {
-							Text = "Snap To",
-							Min = 1,
-						},
-						States = {
-							number = snapTo,
-						},
-					})
-					.numberChanged()
-			then
-				didChange = true
-			end
+			-- if
+			-- 	Osiris.Widget
+			-- 		.SliderNum({
+			-- 			Arguments = {
+			-- 				Text = "Snap To",
+			-- 				Min = 1,
+			-- 			},
+			-- 			States = {
+			-- 				number = snapTo,
+			-- 			},
+			-- 		})
+			-- 		.numberChanged()
+			-- then
+			-- 	didChange = true
+			-- end
 		end)
 		if didChange or #instList == 0 then
 			for i, v in instList do
@@ -101,19 +101,23 @@ return function()
 			)
 			do
 				Package.ENV.DEBUG_SHOW_NORMALS = false
-				-- local n = Package.Face.Any.normal(face).Unit
-				-- local up = Vector3.zAxis:Cross(-n).Unit
-				-- local r = up:Cross(n).Unit
+				local n = Package.Face.Any.normal(face).Unit
+				local up = Vector3.zAxis:Cross(-n).Unit
+				local r = up:Cross(n).Unit
 				for i, rect in
 					Package.Face.Any.tile(face, {
-						Type = "Rows",
+						Type = "Grid",
 						Width = {
 							Type = "Count",
 							Value = rowCount:get(),
 							RetryOnceIfNotExact = true,
 						},
-						SnapTo = snapTo:get(),
-					}) --, up, r)
+						Height = {
+							Type = "Count",
+							Value = rowCount:get(),
+							RetryOnceIfNotExact = true,
+						},
+					}, up, r)
 				do
 					local rectInsts = Package.Face.Any.debug(rect)
 					Package.Debug.color(rectInsts, Color3.new(1, 0.5, 0), "Part")

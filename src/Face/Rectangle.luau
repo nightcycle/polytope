@@ -72,10 +72,59 @@ function Rectangle.tile(
 	assert(up and right, `bad normals`)
 
 	if format.Type == "Rows" then
+		if format.Direction == Enum.FillDirection.Horizontal then
+			local newFormat: FaceUtil.TileFormat = table.clone(format)
+			assert(newFormat.Type == "Rows", `bad type`)
+			newFormat.Direction = Enum.FillDirection.Vertical
+			return Rectangle.tile(face, newFormat, right, up)
+		end
 		local edges = Rectangle.edges(face)
 		local maxRect = Rectangle.fit(face, "Rectangle", up, right)
 		assert(maxRect.Type == "Rectangle", `bad maxRect`)
 		return FaceUtil.tileRowsByStraightEdgeHits(maxRect, format, edges, normal, up, right)
+	elseif format.Type == "Grid" then
+		local maxRect = Rectangle.fit(face, "Rectangle", up, right)
+		assert(maxRect.Type == "Rectangle", `bad maxRect`)
+
+		assert(format.Type == "Grid", `expected "Grid", got "{format.Type}"`)
+		local columnWidth = FaceUtil.solveTileScale(format.Width, maxRect.Width)
+		if columnWidth <= 0 then
+			return {} -- done :D
+		end
+
+		local rowWidth = FaceUtil.solveTileScale(format.Height, maxRect.Height)
+		if rowWidth <= 0 then
+			return {} -- done :D
+		end
+
+		local columns = Rectangle.tile(face, {
+			Type = "Rows",
+			Width = {
+				Type = "Length" :: "Length",
+				Value = columnWidth,
+			} :: FaceUtil.TileScale,
+			SnapTo = rowWidth,
+			Direction = Enum.FillDirection.Vertical,
+		}, up, right) :: { FaceUtil.RectangleFace }
+		local rows = Rectangle.tile(face, {
+			Type = "Rows",
+			Width = {
+				Type = "Length" :: "Length",
+				Value = rowWidth,
+			} :: FaceUtil.TileScale,
+			SnapTo = columnWidth,
+			Direction = Enum.FillDirection.Horizontal,
+		}, up, right) :: { FaceUtil.RectangleFace }
+
+		local center = maxRect.Center.CFrame.Position
+		local cf = CFrame.lookAlong(center, normal, up)
+		local out = {}
+
+		for i, solution in FaceUtil.gridFromRowsAndColumns(cf, columns, rows) do
+			table.insert(out, Rectangle.new(Point.Rotated.new(solution.CFrame), solution.Height, solution.Width))
+		end
+
+		return out
 	else
 		error(`unsupported format: "{format.Type}"`)
 	end

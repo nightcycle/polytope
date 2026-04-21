@@ -7,6 +7,7 @@ local Line = require(script.Parent.Parent.Line)
 local FaceUtil = require(script.Parent.Parent.FaceUtil)
 local InstanceCache = require(script.Parent.Parent.InstanceCache)
 local Util = require(script.Parent.Parent.Util)
+local Rectangle = require(script.Parent.Rectangle)
 -- Types
 export type TriangleFace = FaceUtil.TriangleFace
 -- Constants
@@ -150,13 +151,57 @@ function Triangle.tile(
 	if format.Type == "Rows" then
 		if format.Direction == Enum.FillDirection.Horizontal then
 			local newFormat: FaceUtil.TileFormat = table.clone(format)
+			assert(newFormat.Type == "Rows", `bad type`)
 			newFormat.Direction = Enum.FillDirection.Vertical
-			return Triangle.tile(face, newFormat, up, -(right:Cross(up)))
+			return Triangle.tile(face, newFormat, right, up)
 		end
 		local maxRect = Triangle.fit(face, "Rectangle", up, right)
 		assert(maxRect.Type == "Rectangle", `bad maxRect`)
 		local edges = Triangle.edges(face)
 		return FaceUtil.tileRowsByStraightEdgeHits(maxRect, format, edges, normal, up, right)
+	elseif format.Type == "Grid" then
+		local maxRect = Triangle.fit(face, "Rectangle", up, right)
+		assert(maxRect.Type == "Rectangle", `bad maxRect`)
+
+		assert(format.Type == "Grid", `expected "Grid", got "{format.Type}"`)
+		local columnWidth = FaceUtil.solveTileScale(format.Width, maxRect.Width)
+		if columnWidth <= 0 then
+			return {} -- done :D
+		end
+
+		local rowWidth = FaceUtil.solveTileScale(format.Height, maxRect.Height)
+		if rowWidth <= 0 then
+			return {} -- done :D
+		end
+
+		local columns = Triangle.tile(face, {
+			Type = "Rows",
+			Width = {
+				Type = "Length" :: "Length",
+				Value = columnWidth,
+			} :: FaceUtil.TileScale,
+			SnapTo = rowWidth,
+			Direction = Enum.FillDirection.Vertical,
+		}, up, right) :: { FaceUtil.RectangleFace }
+		local rows = Triangle.tile(face, {
+			Type = "Rows",
+			Width = {
+				Type = "Length" :: "Length",
+				Value = rowWidth,
+			} :: FaceUtil.TileScale,
+			SnapTo = columnWidth,
+			Direction = Enum.FillDirection.Horizontal,
+		}, up, right) :: { FaceUtil.RectangleFace }
+
+		local center = maxRect.Center.CFrame.Position
+		local cf = CFrame.lookAlong(center, normal, up)
+		local out = {}
+
+		for i, solution in FaceUtil.gridFromRowsAndColumns(cf, columns, rows) do
+			table.insert(out, Rectangle.new(Point.Rotated.new(solution.CFrame), solution.Height, solution.Width))
+		end
+
+		return out
 	else
 		error(`unsupported format: "{format.Type}"`)
 	end

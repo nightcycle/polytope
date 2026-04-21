@@ -123,6 +123,12 @@ function Quad.tile(face: QuadFace, format: FaceUtil.TileFormat, up: Vector3?, ri
 
 	local out: { FaceUtil.Face } = {}
 	if format.Type == "Rows" then
+		if format.Direction == Enum.FillDirection.Horizontal then
+			local newFormat: FaceUtil.TileFormat = table.clone(format)
+			assert(newFormat.Type == "Rows", `bad type`)
+			newFormat.Direction = Enum.FillDirection.Vertical
+			return Quad.tile(face, newFormat, right, up)
+		end
 		if not face.Flat then
 			local t1Format = format
 			local t2Format = format
@@ -149,6 +155,83 @@ function Quad.tile(face: QuadFace, format: FaceUtil.TileFormat, up: Vector3?, ri
 			local maxRect = Quad.fit(face, "Rectangle", up, right)
 			assert(maxRect.Type == "Rectangle", `bad maxRect`)
 			return FaceUtil.tileRowsByStraightEdgeHits(maxRect, format, edges, normal, up, right)
+		end
+	elseif format.Type == "Grid" then
+		if not face.Flat then
+			local t1Format = format
+			local t2Format = format
+
+			if format.Width.Type == "Count" then
+				local t1Size = Triangle.magnitude(face.T1)
+				local t2Size = Triangle.magnitude(face.T2)
+				local totalSize = t1Size + t2Size
+				local t1Count = math.round(format.Width.Value * t1Size / totalSize)
+				local t2Count = math.max(0, format.Width.Value - t1Count)
+				t1Format = TableUtil.deepCopy(t1Format) :: typeof(format)
+				assert(t1Format.Width.Type == "Count", `bad width`)
+				t1Format.Width.Value = t1Count + 1
+
+				t2Format = TableUtil.deepCopy(t2Format) :: typeof(format)
+				assert(t2Format.Width.Type == "Count", `bad width`)
+				t2Format.Width.Value = t2Count + 1
+			end
+			if format.Height.Type == "Count" then
+				local t1Size = Triangle.magnitude(face.T1)
+				local t2Size = Triangle.magnitude(face.T2)
+				local totalSize = t1Size + t2Size
+				local t1Count = math.round(format.Height.Value * t1Size / totalSize)
+				local t2Count = math.max(0, format.Height.Value - t1Count)
+				t1Format = TableUtil.deepCopy(t1Format) :: typeof(format)
+				assert(t1Format.Height.Type == "Count", `bad width`)
+				t1Format.Height.Value = t1Count + 1
+
+				t2Format = TableUtil.deepCopy(t2Format) :: typeof(format)
+				assert(t2Format.Height.Type == "Count", `bad width`)
+				t2Format.Height.Value = t2Count + 1
+			end
+
+			Util.join(out, Triangle.tile(face.T1, t1Format, up, right))
+			Util.join(out, Triangle.tile(face.T2, t2Format, up, right))
+		else
+			local maxRect = Quad.fit(face, "Rectangle", up, right)
+			assert(maxRect.Type == "Rectangle", `bad maxRect`)
+
+			assert(format.Type == "Grid", `expected "Grid", got "{format.Type}"`)
+			local columnWidth = FaceUtil.solveTileScale(format.Width, maxRect.Width)
+			if columnWidth <= 0 then
+				return {} -- done :D
+			end
+
+			local rowWidth = FaceUtil.solveTileScale(format.Height, maxRect.Height)
+			if rowWidth <= 0 then
+				return {} -- done :D
+			end
+
+			local columns = Quad.tile(face, {
+				Type = "Rows",
+				Width = {
+					Type = "Length" :: "Length",
+					Value = columnWidth,
+				} :: FaceUtil.TileScale,
+				SnapTo = rowWidth,
+				Direction = Enum.FillDirection.Vertical,
+			}, up, right) :: { FaceUtil.RectangleFace }
+			local rows = Quad.tile(face, {
+				Type = "Rows",
+				Width = {
+					Type = "Length" :: "Length",
+					Value = rowWidth,
+				} :: FaceUtil.TileScale,
+				SnapTo = columnWidth,
+				Direction = Enum.FillDirection.Horizontal,
+			}, up, right) :: { FaceUtil.RectangleFace }
+
+			local center = maxRect.Center.CFrame.Position
+			local cf = CFrame.lookAlong(center, normal, up)
+
+			for i, solution in FaceUtil.gridFromRowsAndColumns(cf, columns, rows) do
+				table.insert(out, Rectangle.new(Point.Rotated.new(solution.CFrame), solution.Height, solution.Width))
+			end
 		end
 	else
 		error(`unsupported format: "{format.Type}"`)
