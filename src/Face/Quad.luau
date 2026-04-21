@@ -1,0 +1,179 @@
+--!strict
+-- Services
+-- Packages
+local TableUtil = require(script.Parent.Parent.Parent.TableUtil)
+-- Modules
+local Point = require(script.Parent.Parent.Point)
+local Line = require(script.Parent.Parent.Line)
+local Triangle = require(script.Parent.Triangle)
+local Rectangle = require(script.Parent.Rectangle)
+local FaceUtil = require(script.Parent.Parent.FaceUtil)
+local Util = require(script.Parent.Parent.Util)
+-- Types
+export type QuadFace = FaceUtil.QuadFace
+-- Constants
+local CONSTANTS = require(script.Parent.Parent.CONSTANTS)
+-- Variables
+-- References
+-- Private Functions
+-- Class
+local Quad = {}
+
+function Quad.new(q1: Point.VertexPoint, q2: Point.BasicPoint, q3: Point.VertexPoint, q4: Point.BasicPoint): QuadFace
+	local face = {
+		Type = "Quad" :: "Quad",
+		T1 = Triangle.new(q1, Point.Vertex.new(q2.Position, q1.Normal), Point.Vertex.new(q4.Position, q1.Normal)),
+		T2 = Triangle.new(q3, Point.Vertex.new(q4.Position, q3.Normal), Point.Vertex.new(q2.Position, q3.Normal)),
+		Flat = false,
+	}
+	face.Flat = Triangle.normal(face.T1):FuzzyEq(Triangle.normal(face.T2), CONSTANTS.FUZZY_EQ.EPSILON)
+	table.freeze(face)
+	return face
+end
+
+function Quad.normal(face: QuadFace): Vector3
+	return (Triangle.normal(face.T1) + Triangle.normal(face.T2)) / 2
+end
+
+function Quad.up(face: QuadFace): Vector3
+	return FaceUtil.upFromNormal(Quad.normal(face))
+end
+
+function Quad.right(face: QuadFace): Vector3
+	return FaceUtil.rightFromNormal(Quad.normal(face))
+end
+
+function Quad.center(face: QuadFace): Vector3
+	return face.T1.P2.Position:Lerp(face.T2.P2.Position, 0.5)
+end
+
+function Quad.fill(face: QuadFace, fill: FaceUtil.FillInfo, rng: Random?): FaceUtil.FillResult
+	if fill.Type == "Surface" then
+		local t1Result = Triangle.fill(face.T1, fill, rng)
+		local t2Result = Triangle.fill(face.T2, fill, rng)
+		local instList = {}
+		for i, inst in t1Result.Instances do
+			table.insert(instList, inst)
+		end
+		for i, inst in t2Result.Instances do
+			table.insert(instList, inst)
+		end
+		local map = {}
+		for part, cf in t1Result.Parts do
+			map[part] = cf
+		end
+		for part, cf in t2Result.Parts do
+			map[part] = cf
+		end
+		return {
+			Instances = instList,
+			Parts = map,
+		}
+	else
+		error(`unsupported type: "{fill.Type}"`)
+	end
+end
+
+function Quad.eq(a: QuadFace, b: QuadFace): boolean
+	if a.Type ~= b.Type then
+		return false
+	end
+	if Triangle.eq(a.T1, b.T1) then
+		if Triangle.eq(a.T2, b.T2) then
+			return true
+		end
+	elseif Triangle.eq(a.T1, b.T2) then
+		if Triangle.eq(a.T2, b.T1) then
+			return true
+		end
+	end
+	return false
+end
+
+function Quad.magnitude(face: QuadFace): number
+	return Triangle.magnitude(face.T1) + Triangle.magnitude(face.T2)
+end
+
+function Quad.isWithin(face: QuadFace, point: Vector3): boolean
+	return Triangle.isWithin(face.T1, point) or Triangle.isWithin(face.T2, point)
+end
+
+function Quad.fit(
+	face: QuadFace,
+	containmentType: FaceUtil.ContainmentType,
+	up: Vector3?,
+	right: Vector3?
+): FaceUtil.Face
+	local normal = Quad.normal(face)
+	up, right = FaceUtil.fixAdjNormals(normal, up or Quad.up(face), right or Quad.right(face))
+	assert(up and right, `bad normals`)
+	local center = Quad.center(face)
+	if containmentType == "Rectangle" then
+		local rectCF, width, height = FaceUtil.getMaxRect(CFrame.fromMatrix(center, right, up), Quad.vertices(face))
+		return Rectangle.new(Point.Rotated.new(rectCF), height, width)
+	else
+		error(`unsupported containmentType: "{containmentType}"`)
+	end
+end
+
+function Quad.tile(face: QuadFace, format: FaceUtil.TileFormat, up: Vector3?, right: Vector3?): { FaceUtil.Face }
+	local normal = Quad.normal(face)
+	up, right = FaceUtil.fixAdjNormals(normal, up or Quad.up(face), right or Quad.right(face))
+	assert(up and right, `bad normals`)
+
+	local out: { FaceUtil.Face } = {}
+	if format.Type == "Rows" then
+		if not face.Flat then
+			local t1Format = format
+			local t2Format = format
+
+			if format.Width.Type == "Count" then
+				local t1Size = Triangle.magnitude(face.T1)
+				local t2Size = Triangle.magnitude(face.T2)
+				local totalSize = t1Size + t2Size
+				local t1Count = math.round(format.Width.Value * t1Size / totalSize)
+				local t2Count = math.max(0, format.Width.Value - t1Count)
+				t1Format = TableUtil.deepCopy(t1Format) :: typeof(format)
+				assert(t1Format.Width.Type == "Count", `bad width`)
+				t1Format.Width.Value = t1Count + 1
+
+				t2Format = TableUtil.deepCopy(t2Format) :: typeof(format)
+				assert(t2Format.Width.Type == "Count", `bad width`)
+				t2Format.Width.Value = t2Count + 1
+			end
+
+			Util.join(out, Triangle.tile(face.T1, t1Format, up, right))
+			Util.join(out, Triangle.tile(face.T2, t2Format, up, right))
+		else
+			local edges = Quad.edges(face)
+			local maxRect = Quad.fit(face, "Rectangle", up, right)
+			assert(maxRect.Type == "Rectangle", `bad maxRect`)
+			return FaceUtil.tileRowsByStraightEdgeHits(maxRect, format, edges, normal, up, right)
+		end
+	else
+		error(`unsupported format: "{format.Type}"`)
+	end
+
+	return out
+end
+
+function Quad.vertices(face: QuadFace): { Point.VertexPoint }
+	return {
+		face.T1.P1,
+		face.T1.P2,
+		face.T2.P1,
+		face.T2.P2,
+	}
+end
+
+function Quad.edges(face: QuadFace): { Line.StraightLine }
+	local points = Quad.vertices(face)
+	return {
+		Line.Straight.new(points[1], points[2]),
+		Line.Straight.new(points[2], points[3]),
+		Line.Straight.new(points[3], points[4]),
+		Line.Straight.new(points[4], points[1]),
+	}
+end
+
+return Quad

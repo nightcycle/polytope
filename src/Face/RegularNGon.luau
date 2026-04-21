@@ -1,0 +1,249 @@
+--!strict
+-- Services
+-- Packages
+-- Modules
+local Point = require(script.Parent.Parent.Point)
+local Line = require(script.Parent.Parent.Line)
+local FaceUtil = require(script.Parent.Parent.FaceUtil)
+local Triangle = require(script.Parent.Triangle)
+local Rectangle = require(script.Parent.Rectangle)
+-- Types
+export type RegularNGonFace = FaceUtil.RegularNGonFace
+-- Constants
+local CONSTANTS = require(script.Parent.Parent.CONSTANTS)
+-- Variables
+-- References
+-- Private Functions
+-- Class
+local RegularNGon = {}
+
+function RegularNGon.new(center: Point.RotatedPoint, diameter: number, sideCount: number): RegularNGonFace
+	local vertices = {}
+	for i = 1, sideCount do
+		local angle = math.rad((i - 1) * 360 / sideCount)
+		vertices[i] = Point.Vertex.new(
+			(center.CFrame * CFrame.new(math.sin(angle) * diameter / 2, math.cos(angle) * diameter / 2, 0)).Position,
+			center.Normal
+		)
+	end
+
+	local face = {
+		Type = "RegularNGon" :: "RegularNGon",
+		Triangles = {},
+		Center = center,
+		Vertices = vertices,
+		SideCount = sideCount,
+		Diameter = diameter,
+	}
+
+	if #vertices > 1 then
+		local centerV = Point.Vertex.new(center.Position, center.Normal)
+		for i = 1, #vertices do
+			local currentV = vertices[i]
+			local nextV = vertices[i + 1] or vertices[1]
+			table.insert(face.Triangles, Triangle.new(currentV, nextV, centerV))
+		end
+	end
+
+	table.freeze(face.Vertices)
+	table.freeze(face.Triangles)
+	table.freeze(face)
+	return face
+end
+
+function RegularNGon.fill(face: RegularNGonFace, fill: FaceUtil.FillInfo, rng: Random?): FaceUtil.FillResult
+	if fill.Type == "Surface" then
+		local instList = {}
+		local map = {}
+		for i, tri in face.Triangles do
+			local tResult = Triangle.fill(tri, fill, rng)
+			for i, inst in tResult.Instances do
+				table.insert(instList, inst)
+			end
+			for part, cf in tResult.Parts do
+				map[part] = cf
+			end
+		end
+		return {
+			Instances = instList,
+			Parts = map,
+		}
+	else
+		error(`unsupported type: "{fill.Type}"`)
+	end
+end
+
+function RegularNGon.eq(a: RegularNGonFace, b: RegularNGonFace): boolean
+	if a.Type ~= b.Type then
+		return false
+	end
+	if #a.Triangles ~= #b.Triangles then
+		return false
+	end
+	for i = 1, #a.Triangles do
+		local aTri = a.Triangles[i]
+		local bTri = b.Triangles[i]
+		if not Triangle.eq(aTri, bTri) then
+			return false
+		end
+	end
+	return true
+end
+
+function RegularNGon.normal(face: RegularNGonFace): Vector3
+	return face.Center.Normal
+end
+
+function RegularNGon.up(face: RegularNGonFace): Vector3
+	return face.Center.CFrame.UpVector
+end
+
+function RegularNGon.right(face: RegularNGonFace): Vector3
+	return face.Center.CFrame.RightVector
+end
+
+function RegularNGon.center(face: RegularNGonFace): Vector3
+	return face.Center.Position
+end
+
+function RegularNGon.magnitude(face: RegularNGonFace): number
+	return 0.5 * face.SideCount * (face.Diameter / 2) ^ 2 * math.sin(2 * math.pi / face.SideCount)
+end
+
+function RegularNGon.isWithin(face: RegularNGonFace, point: Vector3): boolean
+	for i, tri in face.Triangles do
+		if Triangle.isWithin(tri, point) then
+			return true
+		end
+	end
+	return false
+end
+
+function RegularNGon.tile(
+	face: RegularNGonFace,
+	format: FaceUtil.TileFormat,
+	up: Vector3?,
+	right: Vector3?
+): { FaceUtil.Face }
+	local normal = RegularNGon.normal(face)
+	local center = RegularNGon.center(face)
+	up, right = FaceUtil.fixAdjNormals(normal, up or RegularNGon.up(face), right or RegularNGon.right(face))
+	assert(up and right, `bad normals`)
+	if format.Type == "Rows" then
+		if format.Direction == Enum.FillDirection.Horizontal then
+			local newFormat: FaceUtil.TileFormat = table.clone(format)
+			newFormat.Direction = Enum.FillDirection.Vertical
+			return RegularNGon.tile(face, newFormat, up, -(right:Cross(up)))
+		end
+		if face.SideCount > CONSTANTS.NGON_IS_CIRCLE_AFTER then
+			local out = {}
+			local apothem = (face.Diameter / 2) * math.cos(math.pi / face.SideCount)
+			local doubleApothem = apothem * 2
+			local columnWidth: number
+			if format.Width.Type == "Count" then
+				if format.Width.Value <= 0 then
+					return {} -- done :D
+				end
+				columnWidth = doubleApothem / (format.Width.Value + 2)
+			elseif format.Width.Type == "Length" then
+				columnWidth = format.Width.Value
+			else
+				error(`unsupported type: "{format.Width.Type}"`)
+			end
+			local count = math.floor(doubleApothem / columnWidth)
+			local cf = CFrame.lookAlong(center, normal, up)
+
+			local actualColumnWidth = doubleApothem / count
+			local halfWidth = apothem
+			for i = 0, count - 1 do
+				local xMin = i * actualColumnWidth - halfWidth
+				local angle1 = math.acos(xMin / apothem)
+				local y1 = math.abs(math.sin(angle1) * apothem)
+				if y1 ~= y1 then
+					y1 = 0
+				end
+				local xMax = (i + 1) * actualColumnWidth - halfWidth
+
+				local angle2 = math.acos(xMax / apothem)
+				local y2 = math.abs(math.sin(angle2) * apothem)
+				if y2 ~= y2 then
+					y2 = 0
+				end
+
+				local yMin = math.min(y1, y2)
+
+				local rHeight = 2 * yMin
+				local rWidth = xMax - xMin
+
+				if rHeight < CONSTANTS.FUZZY_EQ.LENGTH then
+					continue
+				end
+
+				table.insert(
+					out,
+					Rectangle.new(
+						Point.Rotated.new(
+							CFrame.fromMatrix(
+								cf.Position + (xMin + rWidth / 2) * right,
+								cf.XVector,
+								cf.YVector,
+								cf.ZVector
+							)
+						),
+						rHeight,
+						rWidth
+					)
+				)
+			end
+			return out
+		else
+			local maxRect = RegularNGon.fit(face, "Rectangle", up, right)
+			assert(maxRect.Type == "Rectangle", `bad maxRect`)
+			local edges = RegularNGon.edges(face)
+			return FaceUtil.tileRowsByStraightEdgeHits(maxRect, format, edges, normal, up, right)
+		end
+	else
+		error(`unsupported format: "{format.Type}"`)
+	end
+end
+
+function RegularNGon.fit(
+	face: RegularNGonFace,
+	containmentType: FaceUtil.ContainmentType,
+	up: Vector3?,
+	right: Vector3?
+): FaceUtil.Face
+	local normal = RegularNGon.normal(face)
+	local center = RegularNGon.center(face)
+	up, right = FaceUtil.fixAdjNormals(normal, up or RegularNGon.up(face), right or RegularNGon.right(face))
+	assert(up and right, `bad normals`)
+	if containmentType == "Rectangle" then
+		local cf = CFrame.fromMatrix(center, right, up)
+		if face.SideCount > CONSTANTS.NGON_IS_CIRCLE_AFTER then
+			return Rectangle.new(Point.Rotated.new(cf), face.Diameter, face.Diameter)
+		else
+			local rectCF, width, height = FaceUtil.getMaxRect(cf, RegularNGon.vertices(face))
+			return Rectangle.new(Point.Rotated.new(rectCF), height, width)
+		end
+	else
+		error(`unsupported containment type: "{containmentType}"`)
+	end
+end
+
+function RegularNGon.vertices(face: RegularNGonFace): { Point.VertexPoint }
+	return table.clone(face.Vertices)
+end
+
+function RegularNGon.edges(face: RegularNGonFace): { Line.StraightLine }
+	local priorI = #face.Vertices
+	local out = {}
+	for i = 1, #face.Vertices do
+		local priorVert = face.Vertices[priorI]
+		local nextVert = face.Vertices[i]
+		priorI = i
+		table.insert(out, Line.Straight.new(priorVert, nextVert))
+	end
+	return out
+end
+
+return RegularNGon
