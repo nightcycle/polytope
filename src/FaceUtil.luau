@@ -52,6 +52,7 @@ export type TileFormat = {
 		Type: "Length",
 		Value: number,
 	},
+	SnapTo: number?,
 	Direction: Enum.FillDirection?,
 }
 
@@ -209,11 +210,22 @@ function Util.tileRowsByStraightEdgeHits(
 			if not yRange2 then
 				continue
 			end
-			if yRange1.Max < yRange2.Min or yRange1.Min > yRange2.Max then
+			local yMin1 = yRange1.Min
+			local yMin2 = yRange2.Min
+			local yMax1 = yRange1.Max
+			local yMax2 = yRange2.Max
+			if format.SnapTo then
+				yMin1 = math.ceil(yMin1/format.SnapTo)*format.SnapTo
+				yMin2 = math.ceil(yMin2/format.SnapTo)*format.SnapTo
+				yMax1 = math.floor(yMax1/format.SnapTo)*format.SnapTo
+				yMax2 = math.floor(yMax2/format.SnapTo)*format.SnapTo
+			end
+			if yMax1 < yMin2 or yMin1 > yMax2 then
 				continue
 			end
-			local yMin = math.max(yRange1.Min, yRange2.Min)
-			local yMax = math.min(yRange1.Max, yRange2.Max)
+			local yMin = math.max(yMin1, yMin2)
+
+			local yMax = math.min(yMax1, yMax2)
 
 			local rHeight = yMax - yMin
 			if rHeight < CONSTANTS.FUZZY_EQ.LENGTH then
@@ -227,6 +239,7 @@ function Util.tileRowsByStraightEdgeHits(
 			table.insert(
 				out,
 				table.freeze({
+					Type = "Rectangle",
 					Center = Point.Rotated.new(
 						CFrame.fromMatrix(
 							cf.Position + (xMin + rWidth / 2) * right + (yMin + rHeight / 2) * up,
