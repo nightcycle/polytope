@@ -2,7 +2,19 @@
 -- Services
 -- Packages
 -- Modules
+local FaceUtil = require(script.FaceUtil)
+local PointUtil = require(script.PointUtil)
+
 -- Types
+export type Point = PointUtil.Point
+export type BasicPoint = PointUtil.BasicPoint
+export type RotatedPoint = PointUtil.RotatedPoint
+export type VertexPoint = PointUtil.VertexPoint
+export type Face = FaceUtil.Face
+export type RectangleFace = FaceUtil.RectangleFace
+export type QuadFace = FaceUtil.QuadFace
+export type RegularNGonFace = FaceUtil.RegularNGonFace
+export type TriangleFace = FaceUtil.TriangleFace
 -- Constants
 -- Variables
 -- References
@@ -17,6 +29,5 @@ Module.Point = require(script.Point)
 Module.ENV = require(script.ENV)
 Module.Util = require(script.Util)
 Module.Debug = require(script.Debug)
-
 
 return Module

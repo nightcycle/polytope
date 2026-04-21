@@ -40,16 +40,16 @@ function Any.eq(a: Face, b: Face): boolean
 		return false
 	end
 	if a.Type == "Triangle" then
-		assert(b.Type == "Triangle")
+		assert(b.Type == "Triangle", `bad b type: "{b.Type}"`)
 		return Triangle.eq(a, b)
 	elseif a.Type == "Quad" then
-		assert(b.Type == "Quad")
+		assert(b.Type == "Quad", `bad b type: "{b.Type}"`)
 		return Quad.eq(a, b)
 	elseif a.Type == "Rectangle" then
-		assert(b.Type == "Rectangle")
+		assert(b.Type == "Rectangle", `bad b type: "{b.Type}"`)
 		return Rectangle.eq(a, b)
 	elseif a.Type == "RegularNGon" then
-		assert(b.Type == "RegularNGon")
+		assert(b.Type == "RegularNGon", `bad b type: "{b.Type}"`)
 		return RegularNGon.eq(a, b)
 	else
 		error(`bad type: "{a.Type}"`)
