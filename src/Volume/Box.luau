@@ -6,16 +6,17 @@ local Point = require(script.Parent.Parent.Point)
 local Line = require(script.Parent.Parent.Line)
 local Face = require(script.Parent.Parent.Face)
 local VolumeUtil = require(script.Parent.Parent.VolumeUtil)
+local Util = require(script.Parent.Parent.Util)
 -- Types
-export type BlockVolume = VolumeUtil.BlockVolume
+export type BoxVolume = VolumeUtil.BoxVolume
 -- Constants
 -- Variables
 -- References
 -- Private Functions
 -- Class
-local Block = {}
+local Box = {}
 
-function Block.new(cf: CFrame, size: Vector3): BlockVolume
+function Box.new(cf: CFrame, size: Vector3): BoxVolume
 	local function toVertex(p: Vector3)
 		return Point.Vertex.new(p, (p - cf.Position).Unit)
 	end
@@ -54,7 +55,7 @@ function Block.new(cf: CFrame, size: Vector3): BlockVolume
 	local l_XZ = Line.Straight.new(p_XyZ, p_XYZ)
 
 	local out = {
-		Type = "Block" :: "Block",
+		Type = "Box" :: "Box",
 		Origin = cf,
 		Size = size,
 		Vertices = {
@@ -133,15 +134,15 @@ function Block.new(cf: CFrame, size: Vector3): BlockVolume
 	return out
 end
 
-function Block.vertices(volume: BlockVolume): { Point.VertexPoint }
+function Box.vertices(volume: BoxVolume): { Point.VertexPoint }
 	return table.clone(volume.Vertices)
 end
 
-function Block.edges(volume: BlockVolume): { Line.StraightLine }
+function Box.edges(volume: BoxVolume): { Line.StraightLine }
 	return table.clone(volume.Edges)
 end
 
-function Block.faces(volume: BlockVolume): { Face.RectangleFace }
+function Box.faces(volume: BoxVolume): { Face.RectangleFace }
 	local out = {}
 	for k, v in volume.Faces do
 		table.insert(out, v)
@@ -149,8 +150,20 @@ function Block.faces(volume: BlockVolume): { Face.RectangleFace }
 	return out
 end
 
-function Block.magnitude(volume: BlockVolume): number
+function Box.magnitude(volume: BoxVolume): number
 	return volume.Size.X * volume.Size.Y * volume.Size.Z
 end
 
-return Block
+function Box.debug(volume: BoxVolume): { Instance }
+	local out: { Instance } = {}
+
+	for i, face in Box.faces(volume) do
+		Util.join(out, Face.Any.debug(face))
+	end
+
+	return out
+end
+
+
+
+return Box

@@ -27,6 +27,7 @@ export type TriangleFace = FaceUtil.TriangleFace
 local Module = {}
 
 Module.InstanceCache = require(script.InstanceCache)
+Module.Volume = require(script.Volume)
 Module.Face = require(script.Face)
 Module.Line = require(script.Line)
 Module.Point = require(script.Point)

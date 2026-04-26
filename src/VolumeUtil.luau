@@ -6,8 +6,8 @@ local Point = require(script.Parent.Point)
 local Line = require(script.Parent.Line)
 local Face = require(script.Parent.Face)
 -- Types
-export type BlockVolume = {
-	Type: "Block",
+export type BoxVolume = {
+	Type: "Box",
 	Faces: { [Enum.NormalId]: Face.RectangleFace },
 	Vertices: { Point.VertexPoint },
 	Edges: { Line.StraightLine },
@@ -15,7 +15,7 @@ export type BlockVolume = {
 	Size: Vector3,
 }
 
-export type Volume = BlockVolume
+export type Volume = BoxVolume
 -- Constants
 -- Variables
 -- References

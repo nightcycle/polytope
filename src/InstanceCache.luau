@@ -2,6 +2,7 @@
 -- Services
 -- Packages
 -- Modules
+local PartTemplates = require(script.Parent.PartTemplates)
 -- Types
 export type CacheHandler<V> = {
 	create: (self: CacheHandler<V>) -> V,
@@ -86,6 +87,13 @@ Module.Class = {}
 Module.Class.WedgePart = newCache(function(): WedgePart
 	return Instance.new("WedgePart")
 end)
+Module.Class.TriangleFace = newCache(function(): MeshPart
+	return PartTemplates.Face.Triangle:Clone()
+end)
+Module.Class.RectangleFace = newCache(function(): MeshPart
+	return PartTemplates.Face.Rectangle:Clone()
+end)
+
 
 function Module.clearAll(includeBorrowed: boolean)
 	for k: string, v: CacheHandler<any> in Module.Class :: any do
