@@ -17,10 +17,10 @@ return function()
 	end)
 	local instList: { Instance } = {}
 	local cleanUp = Osiris:Connect(function()
-		local p1 = Controllers.Osiris.SavedState(`{script.Name}/P1`, CFrame.new(Vector3.one + Vector3.new(10, 0, 0)))
-		local p2 = Controllers.Osiris.SavedState(`{script.Name}/P2`, CFrame.new(Vector3.one + Vector3.new(0, 5, 10)))
-		local p3 = Controllers.Osiris.SavedState(`{script.Name}/P3`, CFrame.new(Vector3.one + Vector3.new(2, 3, 2)))
-		local rowCount = Controllers.Osiris.SavedState(`{script.Name}/Rows`, 6)
+		local p1 = Controllers.Osiris.SavedState(`{script:GetFullName()}/P1`, CFrame.new(Vector3.one + Vector3.new(10, 0, 0)))
+		local p2 = Controllers.Osiris.SavedState(`{script:GetFullName()}/P2`, CFrame.new(Vector3.one + Vector3.new(0, 5, 10)))
+		local p3 = Controllers.Osiris.SavedState(`{script:GetFullName()}/P3`, CFrame.new(Vector3.one + Vector3.new(2, 3, 2)))
+		local rowCount = Controllers.Osiris.SavedState(`{script:GetFullName()}/Rows`, 6)
 
 		local widget = Osiris.Widget.Text({
 			Arguments = {
@@ -39,7 +39,7 @@ return function()
 				didChange = true
 			end
 		end
-		local windowSize = Controllers.Osiris.SavedState(`{script.Name}/ControlSize`, Vector2.new(150, 100))
+		local windowSize = Controllers.Osiris.SavedState(`{script:GetFullName()}/ControlSize`, Vector2.new(150, 100))
 		Osiris.Widget.Window({
 			Arguments = {
 				Title = "Controls",

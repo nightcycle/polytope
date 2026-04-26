@@ -18,11 +18,11 @@ return function()
 	end)
 	local instList: { Instance } = {}
 	local cleanUp = Osiris:Connect(function()
-		local o1 = Controllers.Osiris.SavedState(`{script.Name}/O1`, CFrame.new(Vector3.one + Vector3.new(10, 0, 0)))
-		local o2 = Controllers.Osiris.SavedState(`{script.Name}/O2`, CFrame.new(Vector3.one + Vector3.new(0, 5, 10)))
-		local windowSize = Controllers.Osiris.SavedState(`{script.Name}/ControlSize`, Vector2.new(150, 100))
-		local length1 = Controllers.Osiris.SavedState(`{script.Name}/Length1`, 10)
-		local length2 = Controllers.Osiris.SavedState(`{script.Name}/Length2`, 10)
+		local o1 = Controllers.Osiris.SavedState(`{script:GetFullName()}/O1`, CFrame.new(Vector3.one + Vector3.new(10, 0, 0)))
+		local o2 = Controllers.Osiris.SavedState(`{script:GetFullName()}/O2`, CFrame.new(Vector3.one + Vector3.new(0, 5, 10)))
+		local windowSize = Controllers.Osiris.SavedState(`{script:GetFullName()}/ControlSize`, Vector2.new(150, 100))
+		local length1 = Controllers.Osiris.SavedState(`{script:GetFullName()}/Length1`, 10)
+		local length2 = Controllers.Osiris.SavedState(`{script:GetFullName()}/Length2`, 10)
 
 		local widget = Osiris.Widget.Text({
 			Arguments = {

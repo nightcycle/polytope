@@ -25,11 +25,11 @@ return function(frame)
 
 		local didChange = false
 
-		local pointNumber = Controllers.Osiris.SavedState(`{script.Name}/PointNumber`, 6)
-		local length = Controllers.Osiris.SavedState(`{script.Name}/Length`, 50)
-		local rowCount = Controllers.Osiris.SavedState(`{script.Name}/Rows`, 6)
-		local windowSize = Controllers.Osiris.SavedState(`{script.Name}/ControlSize`, Vector2.new(150, 100))
-		local cfState = Controllers.Osiris.SavedState(`{script.Name}/CFrame`, CFrame.new(Vector3.zero))
+		local pointNumber = Controllers.Osiris.SavedState(`{script:GetFullName()}/PointNumber`, 6)
+		local length = Controllers.Osiris.SavedState(`{script:GetFullName()}/Length`, 50)
+		local rowCount = Controllers.Osiris.SavedState(`{script:GetFullName()}/Rows`, 6)
+		local windowSize = Controllers.Osiris.SavedState(`{script:GetFullName()}/ControlSize`, Vector2.new(150, 100))
+		local cfState = Controllers.Osiris.SavedState(`{script:GetFullName()}/CFrame`, CFrame.new(Vector3.zero))
 		do
 			Controllers.Osiris.CFrameInput({
 				Arguments = { Size = 2, Color = Color3.new(0, 0, 1) },
