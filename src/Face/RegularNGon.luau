@@ -7,6 +7,8 @@ local Line = require(script.Parent.Parent.Line)
 local FaceUtil = require(script.Parent.Parent.FaceUtil)
 local Triangle = require(script.Parent.Triangle)
 local Rectangle = require(script.Parent.Rectangle)
+local Util = require(script.Parent.Parent.Util)
+local InstanceCache = require(script.Parent.Parent.InstanceCache)
 -- Types
 export type RegularNGonFace = FaceUtil.RegularNGonFace
 -- Constants
@@ -52,20 +54,16 @@ function RegularNGon.new(center: Point.RotatedPoint, diameter: number, sideCount
 end
 
 function RegularNGon.fill(face: RegularNGonFace, thickness: number?): FaceUtil.FillResult
-	local instList = {}
-	local map = {}
+	local cfList: { CFrame } = {}
+	local partList: { BasePart } = {}
 	for i, tri in face.Triangles do
 		local tResult = Triangle.fill(tri, thickness)
-		for i, inst in tResult.Instances do
-			table.insert(instList, inst)
-		end
-		for part, cf in tResult.Parts do
-			map[part] = cf
-		end
+		Util.join(cfList, tResult.CFrames)
+		Util.join(partList, tResult.Parts)
 	end
 	return {
-		Instances = instList,
-		Parts = map,
+		CFrames = cfList,
+		Parts = partList,
 	}
 end
 

@@ -2,14 +2,14 @@
 -- Services
 -- Packages
 -- Modules
-local PartTemplates = require(script.Parent.PartTemplates)
 -- Types
 export type CacheHandler<V> = {
 	create: (self: CacheHandler<V>) -> V,
 	allocate: (self: CacheHandler<V>) -> V,
 	store: (self: CacheHandler<V>, v: V) -> (),
 	remove: (self: CacheHandler<V>, v: V) -> (),
-	clear: (self: CacheHandler<V>, includeBorroed: boolean) -> (),
+	clear: (self: CacheHandler<V>, includeBorrowed: boolean) -> (),
+	process: (self: CacheHandler<V>, hideLocation: CFrame) -> (),
 	borrowed: (self: CacheHandler<V>) -> { V },
 	cached: (self: CacheHandler<V>) -> { V },
 	size: (self: CacheHandler<V>) -> number,
@@ -22,6 +22,7 @@ export type CacheHandler<V> = {
 function newCache<V>(constructor: () -> V): CacheHandler<V>
 	local cache: { V } = {}
 	local borrowed: { V } = {}
+	local recentlyStored: { V } = {}
 	local out = {
 		create = function(self: CacheHandler<V>)
 			return constructor()
@@ -38,7 +39,7 @@ function newCache<V>(constructor: () -> V): CacheHandler<V>
 			return v
 		end,
 		store = function(self: CacheHandler<V>, v: V)
-			table.insert(cache, v)
+			table.insert(recentlyStored, v)
 		end,
 		remove = function(self: CacheHandler<V>, v: V)
 			pcall(function()
@@ -51,6 +52,18 @@ function newCache<V>(constructor: () -> V): CacheHandler<V>
 		end,
 		cached = function(self: CacheHandler<V>): { V }
 			return table.clone(cache)
+		end,
+		process = function(self: CacheHandler<V>, hideLocation: CFrame): ()
+			local parts = recentlyStored
+			recentlyStored = {}
+			workspace:BulkMoveTo(
+				parts :: { any },
+				table.create(#parts, hideLocation),
+				Enum.BulkMoveMode.FireCFrameChanged
+			)
+			for i, v in parts do
+				table.insert(cache, v)
+			end
 		end,
 		clear = function(self: CacheHandler<V>, includeBorrowed: boolean)
 			do
@@ -87,17 +100,18 @@ Module.Class = {}
 Module.Class.WedgePart = newCache(function(): WedgePart
 	return Instance.new("WedgePart")
 end)
-Module.Class.TriangleFace = newCache(function(): MeshPart
-	return PartTemplates.Face.Triangle:Clone()
+Module.Class.Part = newCache(function(): Part
+	return Instance.new("Part")
 end)
-Module.Class.RectangleFace = newCache(function(): MeshPart
-	return PartTemplates.Face.Rectangle:Clone()
-end)
-
 
 function Module.clearAll(includeBorrowed: boolean)
 	for k: string, v: CacheHandler<any> in Module.Class :: any do
 		v:clear(includeBorrowed)
+	end
+end
+function Module.processAll(hideLocation: CFrame)
+	for k: string, v: CacheHandler<any> in Module.Class :: any do
+		v:process(hideLocation)
 	end
 end
 

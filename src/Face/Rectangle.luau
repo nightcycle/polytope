@@ -5,6 +5,7 @@
 local Point = require(script.Parent.Parent.Point)
 local Line = require(script.Parent.Parent.Line)
 local FaceUtil = require(script.Parent.Parent.FaceUtil)
+local InstanceCache = require(script.Parent.Parent.InstanceCache)
 -- Types
 export type RectangleFace = FaceUtil.RectangleFace
 -- Constants
@@ -131,12 +132,14 @@ function Rectangle.tile(
 end
 
 function Rectangle.fill(face: RectangleFace, thickness: number?): FaceUtil.FillResult
-	local part = Instance.new("Part")
+	local part = InstanceCache.Class.Part:allocate()
 	part.Size = Vector3.new(face.Width, face.Height, thickness or CONSTANTS.MIN_THICKNESS)
 	return {
-		Instances = { part },
 		Parts = {
-			[part] = CFrame.fromMatrix(
+			part,
+		},
+		CFrames = {
+			CFrame.fromMatrix(
 				face.Center.Position - face.Center.Normal * part.Size.Z / 2,
 				face.Center.Up:Cross(-face.Center.Normal),
 				face.Center.Up

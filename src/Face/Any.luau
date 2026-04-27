@@ -287,17 +287,11 @@ function Any.debug(face: Face): { Instance }
 	end
 	if ENV.DEBUG_SHOW_FACES then
 		local result = Any.fill(face)
-		Util.join(out, result.Instances)
-		for i, inst in result.Instances do
+		Util.join(out, result.Parts :: { any })
+		workspace:BulkMoveTo(result.Parts, result.CFrames, Enum.BulkMoveMode.FireCFrameChanged)
+		for i, inst in result.Parts do
 			inst.Parent = workspace.CurrentCamera
 		end
-		local parts = {}
-		local cfs = {}
-		for part, cf in result.Parts do
-			table.insert(parts, part)
-			table.insert(cfs, cf)
-		end
-		workspace:BulkMoveTo(parts, cfs, Enum.BulkMoveMode.FireCFrameChanged)
 	end
 
 	return out

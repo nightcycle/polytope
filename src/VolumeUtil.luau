@@ -15,6 +15,11 @@ export type BoxVolume = {
 	Size: Vector3,
 }
 
+export type FillResult = {
+	Parts: { BasePart },
+	CFrames: { CFrame },
+}
+
 export type Volume = BoxVolume
 -- Constants
 -- Variables

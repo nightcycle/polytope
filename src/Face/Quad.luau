@@ -50,23 +50,16 @@ end
 function Quad.fill(face: QuadFace, thickness: number?): FaceUtil.FillResult
 	local t1Result = Triangle.fill(face.T1, thickness)
 	local t2Result = Triangle.fill(face.T2, thickness)
-	local instList = {}
-	for i, inst in t1Result.Instances do
-		table.insert(instList, inst)
-	end
-	for i, inst in t2Result.Instances do
-		table.insert(instList, inst)
-	end
-	local map = {}
-	for part, cf in t1Result.Parts do
-		map[part] = cf
-	end
-	for part, cf in t2Result.Parts do
-		map[part] = cf
-	end
+	local cfs = table.create(#t1Result.Parts*2)
+	Util.join(cfs, t1Result.CFrames)
+	Util.join(cfs, t2Result.CFrames)
+
+	local parts = table.create(#t1Result.Parts*2)
+	Util.join(parts, t1Result.Parts)
+	Util.join(parts, t2Result.Parts)
 	return {
-		Instances = instList,
-		Parts = map,
+		CFrames = cfs,
+		Parts = parts,
 	}
 end
 

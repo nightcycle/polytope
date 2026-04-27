@@ -42,10 +42,10 @@ function Triangle.fill(face: TriangleFace, thickness: number?): FaceUtil.FillRes
 		b
 	)
 	return {
-		Instances = { a, b },
+		CFrames = { aCF, bCF },
 		Parts = {
-			[a] = aCF,
-			[b] = bCF,
+			a,
+			b,
 		},
 	}
 end

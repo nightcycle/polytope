@@ -7,6 +7,7 @@ local Line = require(script.Parent.Parent.Line)
 local Face = require(script.Parent.Parent.Face)
 local VolumeUtil = require(script.Parent.Parent.VolumeUtil)
 local Util = require(script.Parent.Parent.Util)
+local InstanceCache = require(script.Parent.Parent.InstanceCache)
 -- Types
 export type BoxVolume = VolumeUtil.BoxVolume
 -- Constants
@@ -150,6 +151,14 @@ function Box.faces(volume: BoxVolume): { Face.RectangleFace }
 	return out
 end
 
+function Box.fill(volume: BoxVolume): VolumeUtil.FillResult
+	local part = InstanceCache.Class.Part:allocate()
+	return {
+		Parts = { part },
+		CFrames = { volume.Origin },
+	}
+end
+
 function Box.magnitude(volume: BoxVolume): number
 	return volume.Size.X * volume.Size.Y * volume.Size.Z
 end
@@ -163,7 +172,5 @@ function Box.debug(volume: BoxVolume): { Instance }
 
 	return out
 end
-
-
 
 return Box

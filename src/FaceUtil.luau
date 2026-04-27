@@ -68,8 +68,8 @@ export type TileFormat =
 export type ContainmentType = "Rectangle"
 
 export type FillResult = {
-	Instances: { Instance },
-	Parts: { [BasePart]: CFrame },
+	Parts: { BasePart},
+	CFrames: {CFrame},
 }
 
 -- Constants
