@@ -144,19 +144,34 @@ function Box.edges(volume: BoxVolume): { Line.StraightLine }
 end
 
 function Box.faces(volume: BoxVolume): { Face.RectangleFace }
-	local out = {}
+	local out = table.create(6)
 	for k, v in volume.Faces do
 		table.insert(out, v)
 	end
 	return out
 end
 
-function Box.fill(volume: BoxVolume): VolumeUtil.FillResult
-	local part = InstanceCache.Class.Part:allocate()
-	return {
-		Parts = { part },
-		CFrames = { volume.Origin },
-	}
+function Box.fill(volume: BoxVolume, thickness: number?): VolumeUtil.FillResult
+	if thickness then
+		local parts: { BasePart } = table.create(6)
+		local cfs: { CFrame } = table.create(6)
+		for k, v in volume.Faces do
+			local res = Face.Rectangle.fill(v, thickness)
+			Util.join(parts, res.Parts)
+			Util.join(cfs, res.CFrames)
+		end
+		return {
+			Parts = parts,
+			CFrames = cfs,
+		}
+	else
+		local part = InstanceCache.Class.Part:allocate()
+		part.Size = volume.Size
+		return {
+			Parts = { part },
+			CFrames = { volume.Origin },
+		}
+	end
 end
 
 function Box.magnitude(volume: BoxVolume): number

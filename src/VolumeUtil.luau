@@ -14,6 +14,16 @@ export type BoxVolume = {
 	Origin: CFrame,
 	Size: Vector3,
 }
+export type RegularIcosahedronVolume = {
+	Type: "RegularIcosahedron",
+	Faces: { Face.TriangleFace },
+	Vertices: { Point.VertexPoint },
+	Edges: { Line.StraightLine },
+	Origin: CFrame,
+	Diameter: number,
+}
+
+
 
 export type FillResult = {
 	Parts: { BasePart },
