@@ -8,7 +8,6 @@ local FaceUtil = require(script.Parent.Parent.FaceUtil)
 local Triangle = require(script.Parent.Triangle)
 local Rectangle = require(script.Parent.Rectangle)
 local Util = require(script.Parent.Parent.Util)
-local InstanceCache = require(script.Parent.Parent.InstanceCache)
 -- Types
 export type RegularNGonFace = FaceUtil.RegularNGonFace
 -- Constants

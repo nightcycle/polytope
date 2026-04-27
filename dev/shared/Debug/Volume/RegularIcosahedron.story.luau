@@ -36,7 +36,7 @@ return function()
 				didChange = true
 			end
 		end
-		local sizeState = Controllers.Osiris.SavedState(`{script:GetFullName()}/Diameter`, 5)
+		local sizeState = Controllers.Osiris.SavedState(`{script:GetFullName()}/Diameter`, 25)
 		local windowSize = Controllers.Osiris.SavedState(`{script:GetFullName()}/ControlSize`, Vector2.new(150, 100))
 
 		Osiris.Widget.Window({
@@ -49,10 +49,11 @@ return function()
 		}, function(_)
 			if
 				Osiris.Widget
-					.SliderVector3({
+					.SliderNum({
 						Arguments = {
 							Text = "Size",
-							Min = Vector3.one,
+							Min = 20,
+							Max = 1024,
 						},
 						States = {
 							number = sizeState,
