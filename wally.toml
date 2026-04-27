@@ -1,7 +1,7 @@
 [package]
 name = "nightcycle/polytope"
 description = "A helper library for easier handling of the hierarchy of dimensional constructs often utilized in procedural generation and dynamic placement of 3D objects."
-version = "0.1.0"
+version = "0.1.1"
 license = "Apache"
 registry = "https://github.com/UpliftGames/wally-index"
 realm = "shared"

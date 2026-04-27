@@ -5,6 +5,8 @@
 local FaceUtil = require(script.FaceUtil)
 local LineUtil = require(script.LineUtil)
 local PointUtil = require(script.PointUtil)
+local VolumeUtil = require(script.VolumeUtil)
+
 
 -- Types
 export type Point = PointUtil.Point
@@ -19,6 +21,8 @@ export type RectangleFace = FaceUtil.RectangleFace
 export type QuadFace = FaceUtil.QuadFace
 export type RegularNGonFace = FaceUtil.RegularNGonFace
 export type TriangleFace = FaceUtil.TriangleFace
+export type BoxVolume = VolumeUtil.BoxVolume
+export type RegularIcosahedronVolume = VolumeUtil.RegularIcosahedronVolume
 -- Constants
 -- Variables
 -- References
