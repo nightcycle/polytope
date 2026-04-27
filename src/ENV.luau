@@ -12,7 +12,7 @@ type Env = {
 	[any]: never,
 }
 -- Constants
-local PREFIX = "__MOUNT3D__"
+local PREFIX = "__POLYTOPE__"
 -- Variables
 -- References
 -- Private Functions

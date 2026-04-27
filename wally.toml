@@ -1,5 +1,5 @@
 [package]
-name = "nightcycle/mount-3d"
+name = "nightcycle/polytope"
 description = "A port of "
 version = "0.1.0"
 license = "Apache"
