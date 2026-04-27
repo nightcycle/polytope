@@ -30,8 +30,8 @@ function Triangle.new(p1: Point.VertexPoint, p2: Point.VertexPoint, p3: Point.Ve
 end
 
 function Triangle.fill(face: TriangleFace, thickness: number?): FaceUtil.FillResult
-	local a = InstanceCache.Class.TriangleFace:allocate()
-	local b = InstanceCache.Class.TriangleFace:allocate()
+	local a = InstanceCache.Class.WedgePart:allocate()
+	local b = InstanceCache.Class.WedgePart:allocate()
 	local aCF, bCF = Util.setTriangle(
 		face.P1.Position,
 		face.P2.Position,

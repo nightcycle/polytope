@@ -37,8 +37,8 @@ function Util.setTriangle(
 	c: Vector3,
 	normal: Vector3,
 	thickness: number,
-	w1: BasePart,
-	w2: BasePart
+	w1: WedgePart,
+	w2: WedgePart
 ): (CFrame, CFrame)
 	-- Render the 3D triangle
 	local ab, ac, bc = b - a, c - a, c - b
@@ -58,11 +58,11 @@ function Util.setTriangle(
 
 	local height = math.abs(ab:Dot(up))
 
-	w1.Size = Vector3.new(math.abs(ab:Dot(back)), height, thickness)
-	w2.Size = Vector3.new( math.abs(ac:Dot(back)), height, thickness)
+	w1.Size = Vector3.new(thickness, height, math.abs(ab:Dot(back)))
+	w2.Size = Vector3.new(thickness, height, math.abs(ac:Dot(back)))
 
 	return CFrame.fromMatrix((a + b) / 2, right, up, back) + normal * (-thickness / 2),
-		CFrame.fromMatrix((a + c) / 2, right, up, back) + normal * (-thickness / 2)
+		CFrame.fromMatrix((a + c) / 2, -right, up, -back) + normal * (-thickness / 2)
 end
 
 function Util.join<V>(bin: { V }, newItems: { V })
