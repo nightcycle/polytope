@@ -133,7 +133,9 @@ function RegularIcosahedron.fill(volume: RegularIcosahedronVolume, thickness: nu
 end
 
 function RegularIcosahedron.magnitude(volume: RegularIcosahedronVolume): number
-	return volume.Size.X * volume.Size.Y * volume.Size.Z
+	local R = volume.Diameter / 2
+	local a = R / math.sin(2 * math.pi / 5)
+	return (5 / 12) * (3 + math.sqrt(5)) * a * a * a
 end
 
 function RegularIcosahedron.debug(volume: RegularIcosahedronVolume): { Instance }
