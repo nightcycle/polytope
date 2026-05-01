@@ -28,33 +28,25 @@ function Quad.new(q1: Point.VertexPoint, q2: Point.BasicPoint, q3: Point.VertexP
 	}
 	face.Flat = Triangle.normal(face.T1):FuzzyEq(Triangle.normal(face.T2), CONSTANTS.FUZZY_EQ.EPSILON)
 	table.freeze(face)
-	return face
+	return face :: QuadFace
 end
 
-function Quad.normal(face: QuadFace): Vector3
-	return (Triangle.normal(face.T1) + Triangle.normal(face.T2)) / 2
-end
+function Quad.normal(face: QuadFace): Vector3 return (Triangle.normal(face.T1) + Triangle.normal(face.T2)) / 2 end
 
-function Quad.up(face: QuadFace): Vector3
-	return FaceUtil.upFromNormal(Quad.normal(face))
-end
+function Quad.up(face: QuadFace): Vector3 return FaceUtil.upFromNormal(Quad.normal(face)) end
 
-function Quad.right(face: QuadFace): Vector3
-	return FaceUtil.rightFromNormal(Quad.normal(face))
-end
+function Quad.right(face: QuadFace): Vector3 return FaceUtil.rightFromNormal(Quad.normal(face)) end
 
-function Quad.center(face: QuadFace): Vector3
-	return face.T1.P2.Position:Lerp(face.T2.P2.Position, 0.5)
-end
+function Quad.center(face: QuadFace): Vector3 return face.T1.P2.Position:Lerp(face.T2.P2.Position, 0.5) end
 
 function Quad.fill(face: QuadFace, thickness: number?): FaceUtil.FillResult
 	local t1Result = Triangle.fill(face.T1, thickness)
 	local t2Result = Triangle.fill(face.T2, thickness)
-	local cfs = table.create(#t1Result.Parts*2)
+	local cfs = table.create(#t1Result.Parts * 2) :: { CFrame }
 	Util.join(cfs, t1Result.CFrames)
 	Util.join(cfs, t2Result.CFrames)
 
-	local parts = table.create(#t1Result.Parts*2)
+	local parts = table.create(#t1Result.Parts * 2) :: { BasePart }
 	Util.join(parts, t1Result.Parts)
 	Util.join(parts, t2Result.Parts)
 	return {
@@ -64,24 +56,16 @@ function Quad.fill(face: QuadFace, thickness: number?): FaceUtil.FillResult
 end
 
 function Quad.eq(a: QuadFace, b: QuadFace): boolean
-	if a.Type ~= b.Type then
-		return false
-	end
+	if a.Type ~= b.Type then return false end
 	if Triangle.eq(a.T1, b.T1) then
-		if Triangle.eq(a.T2, b.T2) then
-			return true
-		end
+		if Triangle.eq(a.T2, b.T2) then return true end
 	elseif Triangle.eq(a.T1, b.T2) then
-		if Triangle.eq(a.T2, b.T1) then
-			return true
-		end
+		if Triangle.eq(a.T2, b.T1) then return true end
 	end
 	return false
 end
 
-function Quad.magnitude(face: QuadFace): number
-	return Triangle.magnitude(face.T1) + Triangle.magnitude(face.T2)
-end
+function Quad.magnitude(face: QuadFace): number return Triangle.magnitude(face.T1) + Triangle.magnitude(face.T2) end
 
 function Quad.isWithin(face: QuadFace, point: Vector3): boolean
 	return Triangle.isWithin(face.T1, point) or Triangle.isWithin(face.T2, point)
@@ -98,7 +82,8 @@ function Quad.fit(
 	assert(up and right, `bad normals`)
 	local center = Quad.center(face)
 	if containmentType == "Rectangle" then
-		local rectCF, width, height = FaceUtil.getMaxRect(CFrame.fromMatrix(center, right, up), Quad.vertices(face))
+		local rectCF, width, height =
+			FaceUtil.getMaxRect(CFrame.fromMatrix(center, right, up), Quad.vertices(face) :: { Point.Point })
 		return Rectangle.new(Point.Rotated.new(rectCF), height, width)
 	else
 		error(`unsupported containmentType: "{containmentType}"`)
@@ -128,11 +113,11 @@ function Quad.tile(face: QuadFace, format: FaceUtil.TileFormat, up: Vector3?, ri
 				local totalSize = t1Size + t2Size
 				local t1Count = math.round(format.Width.Value * t1Size / totalSize)
 				local t2Count = math.max(0, format.Width.Value - t1Count)
-				t1Format = TableUtil.deepCopy(t1Format) :: typeof(format)
+				t1Format = TableUtil.deepCopy(t1Format :: any) :: typeof(format)
 				assert(t1Format.Width.Type == "Count", `bad width`)
 				t1Format.Width.Value = t1Count + 1
 
-				t2Format = TableUtil.deepCopy(t2Format) :: typeof(format)
+				t2Format = TableUtil.deepCopy(t2Format :: any) :: typeof(format)
 				assert(t2Format.Width.Type == "Count", `bad width`)
 				t2Format.Width.Value = t2Count + 1
 			end
@@ -143,7 +128,7 @@ function Quad.tile(face: QuadFace, format: FaceUtil.TileFormat, up: Vector3?, ri
 			local edges = Quad.edges(face)
 			local maxRect = Quad.fit(face, "Rectangle", up, right)
 			assert(maxRect.Type == "Rectangle", `bad maxRect`)
-			return FaceUtil.tileRowsByStraightEdgeHits(maxRect, format, edges, normal, up, right)
+			return FaceUtil.tileRowsByStraightEdgeHits(maxRect, format, edges, normal, up, right) :: { FaceUtil.Face }
 		end
 	elseif format.Type == "Grid" then
 		if not face.Flat then
@@ -156,11 +141,11 @@ function Quad.tile(face: QuadFace, format: FaceUtil.TileFormat, up: Vector3?, ri
 				local totalSize = t1Size + t2Size
 				local t1Count = math.round(format.Width.Value * t1Size / totalSize)
 				local t2Count = math.max(0, format.Width.Value - t1Count)
-				t1Format = TableUtil.deepCopy(t1Format) :: typeof(format)
+				t1Format = TableUtil.deepCopy(t1Format :: any) :: typeof(format)
 				assert(t1Format.Width.Type == "Count", `bad width`)
 				t1Format.Width.Value = t1Count + 1
 
-				t2Format = TableUtil.deepCopy(t2Format) :: typeof(format)
+				t2Format = TableUtil.deepCopy(t2Format :: any) :: typeof(format)
 				assert(t2Format.Width.Type == "Count", `bad width`)
 				t2Format.Width.Value = t2Count + 1
 			end
@@ -170,11 +155,11 @@ function Quad.tile(face: QuadFace, format: FaceUtil.TileFormat, up: Vector3?, ri
 				local totalSize = t1Size + t2Size
 				local t1Count = math.round(format.Height.Value * t1Size / totalSize)
 				local t2Count = math.max(0, format.Height.Value - t1Count)
-				t1Format = TableUtil.deepCopy(t1Format) :: typeof(format)
+				t1Format = TableUtil.deepCopy(t1Format :: any) :: typeof(format)
 				assert(t1Format.Height.Type == "Count", `bad width`)
 				t1Format.Height.Value = t1Count + 1
 
-				t2Format = TableUtil.deepCopy(t2Format) :: typeof(format)
+				t2Format = TableUtil.deepCopy(t2Format :: any) :: typeof(format)
 				assert(t2Format.Height.Type == "Count", `bad width`)
 				t2Format.Height.Value = t2Count + 1
 			end

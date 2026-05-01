@@ -28,10 +28,8 @@ local out: Env = setmetatable({}, {
 	__index = function(_, readableKey: string): any?
 		local k = PREFIX .. readableKey
 		local v = _G[k]
-		local dV = rawget(DEFAULT_ENV, readableKey)
-		if dV == nil then
-			error(`Attempt to access undefined key "{readableKey}" in ENV`)
-		end
+		local dV = rawget(DEFAULT_ENV :: any, readableKey)
+		if dV == nil then error(`Attempt to access undefined key "{readableKey}" in ENV`) end
 		if typeof(v) == "string" then
 			if typeof(dV) == "boolean" then
 				if v == "true" then
@@ -56,9 +54,9 @@ local out: Env = setmetatable({}, {
 			return v
 		end
 	end,
-	__newindex = function(_, readableKey, v)
+	__newindex = function(_, readableKey: string, v)
 		local k = PREFIX .. readableKey
-		assert(rawget(DEFAULT_ENV, readableKey) ~= nil, `Attempt to set undefined key "{readableKey}" in ENV`)
+		assert(rawget(DEFAULT_ENV :: any, readableKey) ~= nil, `Attempt to set undefined key "{readableKey}" in ENV`)
 		_G[k] = v
 	end,
 }) :: any

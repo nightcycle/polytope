@@ -25,13 +25,11 @@ function Rotated.new(cf: CFrame): RotatedPoint
 		Position = cf.Position,
 	}
 	table.freeze(out)
-	return out
+	return out :: RotatedPoint
 end
 
 function Rotated.eq(a: RotatedPoint, b: RotatedPoint): boolean
-	if a.Type ~= b.Type then
-		return false
-	end
+	if a.Type ~= b.Type then return false end
 	return Util.positionEq(a.Position, b.Position)
 		and a.Normal:FuzzyEq(b.Normal, CONSTANTS.FUZZY_EQ.EPSILON)
 		and a.Up:FuzzyEq(b.Up, CONSTANTS.FUZZY_EQ.EPSILON)

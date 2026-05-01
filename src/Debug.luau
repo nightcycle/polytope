@@ -16,9 +16,7 @@ function Util.lock(inst: Instance | { Instance }, isLocked: boolean)
 			Util.lock(v, isLocked)
 		end
 	else
-		if inst:IsA("BasePart") then
-			inst.Locked = isLocked
-		end
+		if inst:IsA("BasePart") then inst.Locked = isLocked end
 		for i, v in inst:GetChildren() do
 			Util.lock(v, isLocked)
 		end
@@ -45,8 +43,8 @@ function Util.transparency(inst: Instance | { Instance }, transparency: number, 
 		elseif inst:IsA("HandleAdornment") then
 			if
 				focus == nil
-				or (focus == "Line" and inst.Parent and (inst.Parent.Name == "DebugRay" or inst.Parent.Name == "RotatedPart"))
-				or (focus == "Point" and inst.Parent and inst.Parent.Name == "DebugPoint")
+				or (focus == "Line" and (inst.Parent and (inst.Parent.Name == "DebugRay" or inst.Parent.Name == "RotatedPart")))
+				or (focus == "Point" and (inst.Parent and inst.Parent.Name == "DebugPoint"))
 			then
 				inst.Transparency = transparency
 			end
@@ -74,8 +72,8 @@ function Util.color(inst: Instance | { Instance }, color: Color3, focus: DebugIn
 		elseif inst:IsA("HandleAdornment") then
 			if
 				focus == nil
-				or (focus == "Line" and inst.Parent and (inst.Parent.Name == "DebugRay" or inst.Parent.Name == "RotatedPart"))
-				or (focus == "Point" and inst.Parent and inst.Parent.Name == "DebugPoint")
+				or (focus == "Line" and (inst.Parent and (inst.Parent.Name == "DebugRay" or inst.Parent.Name == "RotatedPart")))
+				or (focus == "Point" and (inst.Parent and inst.Parent.Name == "DebugPoint"))
 			then
 				inst.Color3 = color
 			end

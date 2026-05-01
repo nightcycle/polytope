@@ -49,7 +49,7 @@ function RegularNGon.new(center: Point.RotatedPoint, diameter: number, sideCount
 	table.freeze(face.Vertices)
 	table.freeze(face.Triangles)
 	table.freeze(face)
-	return face
+	return face :: RegularNGonFace
 end
 
 function RegularNGon.fill(face: RegularNGonFace, thickness: number?): FaceUtil.FillResult
@@ -67,37 +67,23 @@ function RegularNGon.fill(face: RegularNGonFace, thickness: number?): FaceUtil.F
 end
 
 function RegularNGon.eq(a: RegularNGonFace, b: RegularNGonFace): boolean
-	if a.Type ~= b.Type then
-		return false
-	end
-	if #a.Triangles ~= #b.Triangles then
-		return false
-	end
+	if a.Type ~= b.Type then return false end
+	if #a.Triangles ~= #b.Triangles then return false end
 	for i = 1, #a.Triangles do
 		local aTri = a.Triangles[i]
 		local bTri = b.Triangles[i]
-		if not Triangle.eq(aTri, bTri) then
-			return false
-		end
+		if not Triangle.eq(aTri, bTri) then return false end
 	end
 	return true
 end
 
-function RegularNGon.normal(face: RegularNGonFace): Vector3
-	return face.Center.Normal
-end
+function RegularNGon.normal(face: RegularNGonFace): Vector3 return face.Center.Normal end
 
-function RegularNGon.up(face: RegularNGonFace): Vector3
-	return face.Center.CFrame.UpVector
-end
+function RegularNGon.up(face: RegularNGonFace): Vector3 return face.Center.CFrame.UpVector end
 
-function RegularNGon.right(face: RegularNGonFace): Vector3
-	return face.Center.CFrame.RightVector
-end
+function RegularNGon.right(face: RegularNGonFace): Vector3 return face.Center.CFrame.RightVector end
 
-function RegularNGon.center(face: RegularNGonFace): Vector3
-	return face.Center.Position
-end
+function RegularNGon.center(face: RegularNGonFace): Vector3 return face.Center.Position end
 
 function RegularNGon.magnitude(face: RegularNGonFace): number
 	return 0.5 * face.SideCount * (face.Diameter / 2) ^ 2 * math.sin(2 * math.pi / face.SideCount)
@@ -105,9 +91,7 @@ end
 
 function RegularNGon.isWithin(face: RegularNGonFace, point: Vector3): boolean
 	for i, tri in face.Triangles do
-		if Triangle.isWithin(tri, point) then
-			return true
-		end
+		if Triangle.isWithin(tri, point) then return true end
 	end
 	return false
 end
@@ -153,25 +137,19 @@ function RegularNGon.tile(
 				local xMin = i * actualColumnWidth - halfWidth
 				local angle1 = math.acos(xMin / apothem)
 				local y1 = math.abs(math.sin(angle1) * apothem)
-				if y1 ~= y1 then
-					y1 = 0
-				end
+				if y1 ~= y1 then y1 = 0 end
 				local xMax = (i + 1) * actualColumnWidth - halfWidth
 
 				local angle2 = math.acos(xMax / apothem)
 				local y2 = math.abs(math.sin(angle2) * apothem)
-				if y2 ~= y2 then
-					y2 = 0
-				end
+				if y2 ~= y2 then y2 = 0 end
 
 				local yMin = math.min(y1, y2)
 
 				local rHeight = 2 * yMin
 				local rWidth = xMax - xMin
 
-				if rHeight < CONSTANTS.FUZZY_EQ.LENGTH then
-					continue
-				end
+				if rHeight < CONSTANTS.FUZZY_EQ.LENGTH then continue end
 
 				table.insert(
 					out,
@@ -194,7 +172,7 @@ function RegularNGon.tile(
 			local maxRect = RegularNGon.fit(face, "Rectangle", up, right)
 			assert(maxRect.Type == "Rectangle", `bad maxRect`)
 			local edges = RegularNGon.edges(face)
-			return FaceUtil.tileRowsByStraightEdgeHits(maxRect, format, edges, normal, up, right)
+			return FaceUtil.tileRowsByStraightEdgeHits(maxRect, format, edges, normal, up, right) :: { FaceUtil.Face }
 		end
 	elseif format.Type == "Grid" then
 		local maxRect = RegularNGon.fit(face, "Rectangle", up, right)
@@ -261,7 +239,7 @@ function RegularNGon.fit(
 		if face.SideCount > CONSTANTS.NGON_IS_CIRCLE_AFTER then
 			return Rectangle.new(Point.Rotated.new(cf), face.Diameter, face.Diameter)
 		else
-			local rectCF, width, height = FaceUtil.getMaxRect(cf, RegularNGon.vertices(face))
+			local rectCF, width, height = FaceUtil.getMaxRect(cf, RegularNGon.vertices(face) :: { Point.Point })
 			return Rectangle.new(Point.Rotated.new(rectCF), height, width)
 		end
 	else
@@ -269,9 +247,7 @@ function RegularNGon.fit(
 	end
 end
 
-function RegularNGon.vertices(face: RegularNGonFace): { Point.VertexPoint }
-	return table.clone(face.Vertices)
-end
+function RegularNGon.vertices(face: RegularNGonFace): { Point.VertexPoint } return table.clone(face.Vertices) end
 
 function RegularNGon.edges(face: RegularNGonFace): { Line.StraightLine }
 	local priorI = #face.Vertices

@@ -36,9 +36,7 @@ function Any.fill(face: Face, thickness: number?): FaceUtil.FillResult
 end
 
 function Any.eq(a: Face, b: Face): boolean
-	if a.Type ~= b.Type then
-		return false
-	end
+	if a.Type ~= b.Type then return false end
 	if a.Type == "Triangle" then
 		assert(b.Type == "Triangle", `bad b type: "{b.Type}"`)
 		return Triangle.eq(a, b)
@@ -184,13 +182,13 @@ end
 
 function Any.vertices(face: Face): { Point.Point }
 	if face.Type == "Triangle" then
-		return Triangle.vertices(face)
+		return Triangle.vertices(face) :: { Point.Point }
 	elseif face.Type == "Quad" then
-		return Quad.vertices(face)
+		return Quad.vertices(face) :: { Point.Point }
 	elseif face.Type == "Rectangle" then
-		return Rectangle.vertices(face)
+		return Rectangle.vertices(face) :: { Point.Point }
 	elseif face.Type == "RegularNGon" then
-		return RegularNGon.vertices(face)
+		return RegularNGon.vertices(face) :: { Point.Point }
 	else
 		error(`bad type: "{face.Type}"`)
 	end
@@ -287,7 +285,7 @@ function Any.debug(face: Face): { Instance }
 	end
 	if ENV.DEBUG_SHOW_FACES then
 		local result = Any.fill(face)
-		Util.join(out, result.Parts :: { any })
+		Util.join(out :: { any }, result.Parts :: { any })
 		workspace:BulkMoveTo(result.Parts, result.CFrames, Enum.BulkMoveMode.FireCFrameChanged)
 		for i, inst in result.Parts do
 			inst.Parent = workspace.CurrentCamera

@@ -23,13 +23,11 @@ function Vertex.new(position: Vector3, normal: Vector3): VertexPoint
 		Normal = normal,
 	}
 	table.freeze(out)
-	return out
+	return out :: VertexPoint
 end
 
 function Vertex.eq(a: VertexPoint, b: VertexPoint): boolean
-	if a.Type ~= b.Type then
-		return false
-	end
+	if a.Type ~= b.Type then return false end
 	return Util.positionEq(a.Position, b.Position) and a.Normal:FuzzyEq(b.Normal, CONSTANTS.FUZZY_EQ.EPSILON)
 end
 

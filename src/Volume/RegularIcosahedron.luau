@@ -17,9 +17,7 @@ export type RegularIcosahedronVolume = VolumeUtil.RegularIcosahedronVolume
 local RegularIcosahedron = {}
 
 function RegularIcosahedron.new(cf: CFrame, diameter: number): RegularIcosahedronVolume
-	local function toVertex(p: Vector3)
-		return Point.Vertex.new(p, (p - cf.Position).Unit)
-	end
+	local function toVertex(p: Vector3) return Point.Vertex.new(p, (p - cf.Position).Unit) end
 
 	local phi = (1 + math.sqrt(5)) / 2
 	local circumradius = diameter / 2
@@ -27,47 +25,47 @@ function RegularIcosahedron.new(cf: CFrame, diameter: number): RegularIcosahedro
 	local s = circumradius / rawLen
 
 	local rawVerts: { Vector3 } = {
-		Vector3.new(0,  1,  phi) * s,
-		Vector3.new(0,  1, -phi) * s,
-		Vector3.new(0, -1,  phi) * s,
+		Vector3.new(0, 1, phi) * s,
+		Vector3.new(0, 1, -phi) * s,
+		Vector3.new(0, -1, phi) * s,
 		Vector3.new(0, -1, -phi) * s,
-		Vector3.new( 1,  phi, 0) * s,
-		Vector3.new( 1, -phi, 0) * s,
-		Vector3.new(-1,  phi, 0) * s,
+		Vector3.new(1, phi, 0) * s,
+		Vector3.new(1, -phi, 0) * s,
+		Vector3.new(-1, phi, 0) * s,
 		Vector3.new(-1, -phi, 0) * s,
-		Vector3.new( phi, 0,  1) * s,
-		Vector3.new( phi, 0, -1) * s,
-		Vector3.new(-phi, 0,  1) * s,
+		Vector3.new(phi, 0, 1) * s,
+		Vector3.new(phi, 0, -1) * s,
+		Vector3.new(-phi, 0, 1) * s,
 		Vector3.new(-phi, 0, -1) * s,
 	}
 
-	local verts: { Point.VertexPoint } = table.create(12)
+	local verts: { Point.VertexPoint } = table.create(12) :: { Point.VertexPoint }
 	for i, rv in rawVerts do
 		local worldPos = cf:PointToWorldSpace(rv)
 		verts[i] = toVertex(worldPos)
 	end
 
 	local faceIndices: { { number } } = {
-		{ 1,  3,  9 },
-		{ 1,  9,  5 },
-		{ 1,  5,  7 },
-		{ 1,  7, 11 },
-		{ 1, 11,  3 },
-		{ 4, 10,  2 },
-		{ 4,  2, 12 },
-		{ 4, 12,  8 },
-		{ 4,  8,  6 },
-		{ 4,  6, 10 },
-		{ 9,  3,  6 },
-		{ 9,  6, 10 },
-		{ 9, 10,  5 },
-		{ 5, 10,  2 },
-		{ 5,  2,  7 },
-		{ 7,  2, 12 },
+		{ 1, 3, 9 },
+		{ 1, 9, 5 },
+		{ 1, 5, 7 },
+		{ 1, 7, 11 },
+		{ 1, 11, 3 },
+		{ 4, 10, 2 },
+		{ 4, 2, 12 },
+		{ 4, 12, 8 },
+		{ 4, 8, 6 },
+		{ 4, 6, 10 },
+		{ 9, 3, 6 },
+		{ 9, 6, 10 },
+		{ 9, 10, 5 },
+		{ 5, 10, 2 },
+		{ 5, 2, 7 },
+		{ 7, 2, 12 },
 		{ 7, 12, 11 },
-		{11, 12,  8 },
-		{11,  8,  3 },
-		{ 3,  8,  6 },
+		{ 11, 12, 8 },
+		{ 11, 8, 3 },
+		{ 3, 8, 6 },
 	}
 
 	local edgeMap: { [string]: true } = {}
@@ -86,7 +84,7 @@ function RegularIcosahedron.new(cf: CFrame, diameter: number): RegularIcosahedro
 		end
 	end
 
-	local faces: { Face.TriangleFace } = table.create(20)
+	local faces: { Face.TriangleFace } = table.create(20) :: { Face.TriangleFace }
 	for i, tri in faceIndices do
 		faces[i] = Face.Triangle.new(verts[tri[1]], verts[tri[2]], verts[tri[3]])
 	end
@@ -103,7 +101,7 @@ function RegularIcosahedron.new(cf: CFrame, diameter: number): RegularIcosahedro
 	table.freeze(out.Vertices)
 	table.freeze(out.Edges)
 	table.freeze(out.Faces)
-	return out
+	return out :: RegularIcosahedronVolume
 end
 
 function RegularIcosahedron.vertices(volume: RegularIcosahedronVolume): { Point.VertexPoint }
@@ -119,8 +117,8 @@ function RegularIcosahedron.faces(volume: RegularIcosahedronVolume): { Face.Tria
 end
 
 function RegularIcosahedron.fill(volume: RegularIcosahedronVolume, thickness: number?): VolumeUtil.FillResult
-	local parts: { BasePart } = table.create(6)
-	local cfs: { CFrame } = table.create(6)
+	local parts: { BasePart } = table.create(6) :: { BasePart }
+	local cfs: { CFrame } = table.create(6) :: { CFrame }
 	for k, v in volume.Faces do
 		local res = Face.Triangle.fill(v, thickness)
 		Util.join(parts, res.Parts)

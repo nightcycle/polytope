@@ -68,8 +68,8 @@ export type TileFormat =
 export type ContainmentType = "Rectangle"
 
 export type FillResult = {
-	Parts: { BasePart},
-	CFrames: {CFrame},
+	Parts: { BasePart },
+	CFrames: { CFrame },
 }
 
 -- Constants
@@ -81,9 +81,7 @@ local CONSTANTS = require(script.Parent.CONSTANTS)
 -- Class
 local Util = {}
 function Util.rightFromNormal(normal: Vector3): Vector3
-	if math.abs(Vector3.yAxis:Dot(normal)) == 1 then
-		return Vector3.zAxis:Cross(-normal).Unit
-	end
+	if math.abs(Vector3.yAxis:Dot(normal)) == 1 then return Vector3.zAxis:Cross(-normal).Unit end
 	return Vector3.yAxis:Cross(-normal).Unit
 end
 function Util.upFromNormal(normal: Vector3, right: Vector3?): Vector3
@@ -127,9 +125,7 @@ function Util.getMaxRect(origin: CFrame, points: { Point.Point }): (CFrame, numb
 end
 function Util.solveTileScale(tileScale: TileScale, maxRectDim: number): number
 	if tileScale.Type == "Count" then
-		if tileScale.Value <= 0 then
-			return 0
-		end
+		if tileScale.Value <= 0 then return 0 end
 		return maxRectDim / (tileScale.Value + 2)
 	elseif tileScale.Type == "Length" then
 		return tileScale.Value
@@ -159,9 +155,7 @@ function Util.tileRowsByStraightEdgeHits(
 		local hits: { Vector3 } = {}
 		for i, edge in edges do
 			local intersection = Line.Straight.intersection(line, edge)
-			if intersection then
-				table.insert(hits, intersection)
-			end
+			if intersection then table.insert(hits, intersection) end
 		end
 		return hits
 	end
@@ -169,9 +163,7 @@ function Util.tileRowsByStraightEdgeHits(
 	local function solveSlice(offsetX: number): NumberRange?
 		local lineHits = getHits(center + right * offsetX - up * halfHeight, up * maxRect.Height)
 		if #lineHits ~= 2 then
-			if #lineHits < 2 then
-				return nil
-			end
+			if #lineHits < 2 then return nil end
 			local uniquePoints: { Vector3 } = {}
 			for i, hit in lineHits do
 				local allUnique = true
@@ -181,9 +173,7 @@ function Util.tileRowsByStraightEdgeHits(
 						break
 					end
 				end
-				if allUnique then
-					table.insert(uniquePoints, hit)
-				end
+				if allUnique then table.insert(uniquePoints, hit) end
 			end
 			if #uniquePoints == 2 then
 				lineHits = uniquePoints
@@ -204,14 +194,10 @@ function Util.tileRowsByStraightEdgeHits(
 		for i = 0, count - 1 do
 			local xMin = i * actualColumnWidth - halfWidth
 			local yRange1 = solveSlice(xMin) -- or NumberRange.new(-halfHeight,halfHeight)
-			if not yRange1 then
-				continue
-			end
+			if not yRange1 then continue end
 			local xMax = (i + 1) * actualColumnWidth - halfWidth
 			local yRange2 = solveSlice(xMax) -- or NumberRange.new(-halfHeight,halfHeight)
-			if not yRange2 then
-				continue
-			end
+			if not yRange2 then continue end
 			local yMin1 = yRange1.Min
 			local yMin2 = yRange2.Min
 			local yMax1 = yRange1.Max
@@ -222,21 +208,15 @@ function Util.tileRowsByStraightEdgeHits(
 				yMax1 = math.floor(yMax1 / format.SnapTo) * format.SnapTo
 				yMax2 = math.floor(yMax2 / format.SnapTo) * format.SnapTo
 			end
-			if yMax1 < yMin2 or yMin1 > yMax2 then
-				continue
-			end
+			if yMax1 < yMin2 or yMin1 > yMax2 then continue end
 			local yMin = math.max(yMin1, yMin2)
 
 			local yMax = math.min(yMax1, yMax2)
 
 			local rHeight = yMax - yMin
-			if rHeight < CONSTANTS.FUZZY_EQ.LENGTH then
-				continue
-			end
+			if rHeight < CONSTANTS.FUZZY_EQ.LENGTH then continue end
 			local rWidth = xMax - xMin
-			if rWidth < CONSTANTS.FUZZY_EQ.LENGTH then
-				continue
-			end
+			if rWidth < CONSTANTS.FUZZY_EQ.LENGTH then continue end
 
 			table.insert(
 				out,
@@ -252,13 +232,13 @@ function Util.tileRowsByStraightEdgeHits(
 					),
 					Height = rHeight,
 					Width = rWidth,
-				} :: RectangleFace)
+				} :: RectangleFace) :: RectangleFace
 			)
 		end
 	end
 
 	if format.Width.Type == "Count" and format.Width.Value ~= #out and format.Width.RetryOnceIfNotExact == true then
-		local newFormat = TableUtil.deepCopy(format) :: typeof(format)
+		local newFormat = TableUtil.deepCopy(format :: any) :: typeof(format)
 		local newWidth = newFormat.Width :: typeof(format.Width)
 		newWidth.RetryOnceIfNotExact = false
 		local dif = math.abs(format.Width.Value - #out)
@@ -314,13 +294,9 @@ function Util.gridFromRowsAndColumns(
 			local rowXMin = rowYOffset.X - rowXHalfWidth
 			local rowXMax = rowYOffset.X + rowXHalfWidth
 
-			if not (colXMin >= rowXMin and colXMax <= rowXMax) then
-				continue
-			end
+			if not (colXMin >= rowXMin and colXMax <= rowXMax) then continue end
 
-			if not (rowYMin >= colYMin and rowYMax <= colYMax) then
-				continue
-			end
+			if not (rowYMin >= colYMin and rowYMax <= colYMax) then continue end
 
 			table.insert(out, {
 				CFrame = cf * CFrame.new(xOffset, yOffset, 0),

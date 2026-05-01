@@ -21,13 +21,11 @@ function Basic.new(position: Vector3): BasicPoint
 		Position = position,
 	}
 	table.freeze(out)
-	return out
+	return out :: BasicPoint
 end
 
 function Basic.eq(a: BasicPoint, b: BasicPoint): boolean
-	if a.Type ~= b.Type then
-		return false
-	end
+	if a.Type ~= b.Type then return false end
 	return Util.positionEq(a.Position, b.Position)
 end
 

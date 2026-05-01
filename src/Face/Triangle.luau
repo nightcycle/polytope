@@ -26,7 +26,7 @@ function Triangle.new(p1: Point.VertexPoint, p2: Point.VertexPoint, p3: Point.Ve
 		P3 = p3,
 	}
 	table.freeze(face)
-	return face
+	return face :: TriangleFace
 end
 
 function Triangle.fill(face: TriangleFace, thickness: number?): FaceUtil.FillResult
@@ -60,22 +60,16 @@ function Triangle.normal(face: TriangleFace): Vector3
 	end
 end
 
-function Triangle.up(face: TriangleFace): Vector3
-	return FaceUtil.upFromNormal(Triangle.normal(face))
-end
+function Triangle.up(face: TriangleFace): Vector3 return FaceUtil.upFromNormal(Triangle.normal(face)) end
 
-function Triangle.right(face: TriangleFace): Vector3
-	return FaceUtil.rightFromNormal(Triangle.normal(face))
-end
+function Triangle.right(face: TriangleFace): Vector3 return FaceUtil.rightFromNormal(Triangle.normal(face)) end
 
 function Triangle.center(face: TriangleFace): Vector3
 	return (face.P1.Position + face.P2.Position + face.P3.Position) / 3
 end
 
 function Triangle.eq(a: TriangleFace, b: TriangleFace): boolean
-	if a.Type ~= b.Type then
-		return false
-	end
+	if a.Type ~= b.Type then return false end
 	if Point.Vertex.eq(a.P1, b.P1) then
 		if Point.Vertex.eq(a.P2, b.P2) then
 			return Point.Vertex.eq(a.P3, b.P3)
@@ -122,7 +116,8 @@ function Triangle.fit(
 	up, right = FaceUtil.fixAdjNormals(normal, up or Triangle.up(face), right or Triangle.right(face))
 	assert(up and right, `bad normals`)
 	if containmentType == "Rectangle" then
-		local rectCF, width, height = FaceUtil.getMaxRect(CFrame.fromMatrix(center, right, up), Triangle.vertices(face))
+		local rectCF, width, height =
+			FaceUtil.getMaxRect(CFrame.fromMatrix(center, right, up), Triangle.vertices(face) :: { Point.Point })
 		local rectangle: FaceUtil.RectangleFace = {
 			Type = "Rectangle",
 			Center = Point.Rotated.new(rectCF),
@@ -154,7 +149,7 @@ function Triangle.tile(
 		local maxRect = Triangle.fit(face, "Rectangle", up, right)
 		assert(maxRect.Type == "Rectangle", `bad maxRect`)
 		local edges = Triangle.edges(face)
-		return FaceUtil.tileRowsByStraightEdgeHits(maxRect, format, edges, normal, up, right)
+		return FaceUtil.tileRowsByStraightEdgeHits(maxRect, format, edges, normal, up, right) :: { FaceUtil.Face }
 	elseif format.Type == "Grid" then
 		local maxRect = Triangle.fit(face, "Rectangle", up, right)
 		assert(maxRect.Type == "Rectangle", `bad maxRect`)

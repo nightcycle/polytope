@@ -26,16 +26,12 @@ function QuadraticBezier.new(
 		Intersection = intersection,
 	} :: QuadraticBezierLine
 	table.freeze(out)
-	return out
+	return out :: QuadraticBezierLine
 end
 
 function QuadraticBezier.eq(a: QuadraticBezierLine, b: QuadraticBezierLine): boolean
-	if a.Type ~= b.Type then
-		return false
-	end
-	if not Point.Basic.eq(a.Intersection, b.Intersection) then
-		return false
-	end
+	if a.Type ~= b.Type then return false end
+	if not Point.Basic.eq(a.Intersection, b.Intersection) then return false end
 	if Point.Vertex.eq(a.P1, b.P1) then
 		return Point.Vertex.eq(a.P2, b.P2)
 	elseif Point.Vertex.eq(a.P1, b.P2) then

@@ -18,9 +18,7 @@ export type BoxVolume = VolumeUtil.BoxVolume
 local Box = {}
 
 function Box.new(cf: CFrame, size: Vector3): BoxVolume
-	local function toVertex(p: Vector3)
-		return Point.Vertex.new(p, (p - cf.Position).Unit)
-	end
+	local function toVertex(p: Vector3) return Point.Vertex.new(p, (p - cf.Position).Unit) end
 
 	local xyz = cf:PointToWorldSpace(size * 0.5 * Vector3.new(1, 1, 1))
 	local Xyz = cf:PointToWorldSpace(size * 0.5 * Vector3.new(-1, 1, 1))
@@ -55,7 +53,7 @@ function Box.new(cf: CFrame, size: Vector3): BoxVolume
 	local l_Xz = Line.Straight.new(p_Xyz, p_XYz)
 	local l_XZ = Line.Straight.new(p_XyZ, p_XYZ)
 
-	local out = {
+	local out: BoxVolume = {
 		Type = "Box" :: "Box",
 		Origin = cf,
 		Size = size,
@@ -126,25 +124,21 @@ function Box.new(cf: CFrame, size: Vector3): BoxVolume
 				size.Z,
 				size.X
 			),
-		},
+		} :: { [Enum.NormalId]: Face.RectangleFace },
 	}
 	table.freeze(out)
 	table.freeze(out.Vertices)
 	table.freeze(out.Edges)
 	table.freeze(out.Faces)
-	return out
+	return out :: BoxVolume
 end
 
-function Box.vertices(volume: BoxVolume): { Point.VertexPoint }
-	return table.clone(volume.Vertices)
-end
+function Box.vertices(volume: BoxVolume): { Point.VertexPoint } return table.clone(volume.Vertices) end
 
-function Box.edges(volume: BoxVolume): { Line.StraightLine }
-	return table.clone(volume.Edges)
-end
+function Box.edges(volume: BoxVolume): { Line.StraightLine } return table.clone(volume.Edges) end
 
 function Box.faces(volume: BoxVolume): { Face.RectangleFace }
-	local out = table.create(6)
+	local out = table.create(6) :: { Face.RectangleFace }
 	for k, v in volume.Faces do
 		table.insert(out, v)
 	end
@@ -153,8 +147,8 @@ end
 
 function Box.fill(volume: BoxVolume, thickness: number?): VolumeUtil.FillResult
 	if thickness then
-		local parts: { BasePart } = table.create(6)
-		local cfs: { CFrame } = table.create(6)
+		local parts: { BasePart } = table.create(6) :: { BasePart }
+		local cfs: { CFrame } = table.create(6) :: { CFrame }
 		for k, v in volume.Faces do
 			local res = Face.Rectangle.fill(v, thickness)
 			Util.join(parts, res.Parts)
@@ -174,9 +168,7 @@ function Box.fill(volume: BoxVolume, thickness: number?): VolumeUtil.FillResult
 	end
 end
 
-function Box.magnitude(volume: BoxVolume): number
-	return volume.Size.X * volume.Size.Y * volume.Size.Z
-end
+function Box.magnitude(volume: BoxVolume): number return volume.Size.X * volume.Size.Y * volume.Size.Z end
 
 function Box.debug(volume: BoxVolume): { Instance }
 	local out: { Instance } = {}

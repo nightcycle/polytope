@@ -25,13 +25,11 @@ function Straight.new(p1: Point.VertexPoint, p2: Point.VertexPoint): StraightLin
 		Offset = p2.Position - p1.Position,
 	} :: StraightLine
 	table.freeze(out)
-	return out
+	return out :: StraightLine
 end
 
 function Straight.eq(a: StraightLine, b: StraightLine): boolean
-	if a.Type ~= b.Type then
-		return false
-	end
+	if a.Type ~= b.Type then return false end
 	if Point.Vertex.eq(a.P1, b.P1) then
 		return Point.Vertex.eq(a.P2, b.P2)
 	elseif Point.Vertex.eq(a.P1, b.P2) then
@@ -40,9 +38,7 @@ function Straight.eq(a: StraightLine, b: StraightLine): boolean
 	return false
 end
 
-function Straight.magnitude(line: StraightLine): number
-	return line.Offset.Magnitude
-end
+function Straight.magnitude(line: StraightLine): number return line.Offset.Magnitude end
 
 function Straight.closestPoints(
 	a: StraightLine,
@@ -108,9 +104,7 @@ end
 
 function Straight.intersection(a: StraightLine, b: StraightLine, epsilon: number?): Vector3?
 	local closestPoints = Straight.closestPoints(a, b)
-	if closestPoints.Distance > (epsilon or CONSTANTS.FUZZY_EQ.LENGTH) then
-		return nil
-	end
+	if closestPoints.Distance > (epsilon or CONSTANTS.FUZZY_EQ.LENGTH) then return nil end
 	-- Return the midpoint of the two closest points
 	return closestPoints.A.Position:Lerp(closestPoints.B.Position, 0.5)
 end
@@ -122,9 +116,7 @@ function Straight.debug(line: StraightLine): { Instance }
 	if ENV.DEBUG_SHOW_LINES then
 		local newLine = Draw.vector(line.P1.Position, line.Offset)
 		for i, child in newLine:GetDescendants() do
-			if child:IsA("BasePart") then
-				child.Locked = true
-			end
+			if child:IsA("BasePart") then child.Locked = true end
 		end
 		table.insert(out, newLine)
 	end

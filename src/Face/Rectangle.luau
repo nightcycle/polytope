@@ -24,24 +24,16 @@ function Rectangle.new(center: Point.RotatedPoint, height: number, width: number
 		Width = width,
 	}
 	table.freeze(face)
-	return face
+	return face :: RectangleFace
 end
 
-function Rectangle.normal(face: RectangleFace): Vector3
-	return -face.Center.CFrame.LookVector
-end
+function Rectangle.normal(face: RectangleFace): Vector3 return -face.Center.CFrame.LookVector end
 
-function Rectangle.up(face: RectangleFace): Vector3
-	return face.Center.CFrame.UpVector
-end
+function Rectangle.up(face: RectangleFace): Vector3 return face.Center.CFrame.UpVector end
 
-function Rectangle.right(face: RectangleFace): Vector3
-	return face.Center.CFrame.RightVector
-end
+function Rectangle.right(face: RectangleFace): Vector3 return face.Center.CFrame.RightVector end
 
-function Rectangle.center(face: RectangleFace): Vector3
-	return face.Center.Position
-end
+function Rectangle.center(face: RectangleFace): Vector3 return face.Center.Position end
 
 function Rectangle.fit(
 	face: RectangleFace,
@@ -55,7 +47,7 @@ function Rectangle.fit(
 	assert(up and right, `bad normals`)
 	if containmentType == "Rectangle" then
 		local rectCF, width, height =
-			FaceUtil.getMaxRect(CFrame.fromMatrix(center, right, up), Rectangle.vertices(face))
+			FaceUtil.getMaxRect(CFrame.fromMatrix(center, right, up), Rectangle.vertices(face) :: { Point.Point })
 		return Rectangle.new(Point.Rotated.new(rectCF), height, width)
 	else
 		error(`unsupported containment type: "{containmentType}"`)
@@ -82,7 +74,7 @@ function Rectangle.tile(
 		local edges = Rectangle.edges(face)
 		local maxRect = Rectangle.fit(face, "Rectangle", up, right)
 		assert(maxRect.Type == "Rectangle", `bad maxRect`)
-		return FaceUtil.tileRowsByStraightEdgeHits(maxRect, format, edges, normal, up, right)
+		return FaceUtil.tileRowsByStraightEdgeHits(maxRect, format, edges, normal, up, right) :: { FaceUtil.Face }
 	elseif format.Type == "Grid" then
 		local maxRect = Rectangle.fit(face, "Rectangle", up, right)
 		assert(maxRect.Type == "Rectangle", `bad maxRect`)
@@ -149,24 +141,14 @@ function Rectangle.fill(face: RectangleFace, thickness: number?): FaceUtil.FillR
 end
 
 function Rectangle.eq(a: RectangleFace, b: RectangleFace): boolean
-	if a.Type ~= b.Type then
-		return false
-	end
-	if not Point.Any.eq(a.Center, b.Center) then
-		return false
-	end
-	if math.abs(a.Height - b.Height) > CONSTANTS.FUZZY_EQ.LENGTH then
-		return false
-	end
-	if math.abs(a.Width - b.Width) > CONSTANTS.FUZZY_EQ.LENGTH then
-		return false
-	end
+	if a.Type ~= b.Type then return false end
+	if not Point.Any.eq(a.Center, b.Center) then return false end
+	if math.abs(a.Height - b.Height) > CONSTANTS.FUZZY_EQ.LENGTH then return false end
+	if math.abs(a.Width - b.Width) > CONSTANTS.FUZZY_EQ.LENGTH then return false end
 	return true
 end
 
-function Rectangle.magnitude(face: RectangleFace): number
-	return face.Width * face.Height
-end
+function Rectangle.magnitude(face: RectangleFace): number return face.Width * face.Height end
 
 function Rectangle.isWithin(face: RectangleFace, point: Vector3): boolean
 	local offset = point - face.Center.Position
