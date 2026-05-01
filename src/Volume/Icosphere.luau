@@ -103,17 +103,12 @@ function Icosphere.new(center: CFrame, diameter: number, subdivisions: number): 
 	}
 end
 
-function Icosphere.fill(
-	planet: IcosphereVolume,
-	thickness: number?,
-	filter: ((face: TriangleFace) -> boolean)?
-): VolumeUtil.FillResult
+function Icosphere.fill(planet: IcosphereVolume, thickness: number?): VolumeUtil.FillResult
 	local faces = planet.Faces
 	local parts: { BasePart } = table.create(#faces * 2) :: { BasePart }
 	local cframes: { CFrame } = table.create(#faces * 2) :: { CFrame }
 
 	for _, face in faces do
-		if filter and not filter(face) then continue end
 		local res = Face.Triangle.fill(face, thickness)
 		Util.join(parts, res.Parts)
 		Util.join(cframes, res.CFrames)
