@@ -94,6 +94,7 @@ function Icosphere.new(center: CFrame, diameter: number, subdivisions: number): 
 
 	return {
 		Type = "Icosphere" :: "Icosphere",
+		Id = Util.cantor3Pair(Util.cantorCFrame(center), math.ceil(diameter / CONSTANTS.FUZZY_EQ.LENGTH), subdivisions),
 		Center = center,
 		Diameter = diameter,
 		Subdivisions = subdivisions,
@@ -129,7 +130,7 @@ function Icosphere.edges(volume: IcosphereVolume): { Line.StraightLine }
 	local map: { [number]: true? } = {}
 	for _, face in volume.Faces do
 		for _, edge in Face.Triangle.edges(face) do
-			local id = Line.Straight.getId(edge)
+			local id = edge.Id
 			if map[id] then continue end
 			map[id] = true
 			table.insert(edges, edge)
@@ -143,7 +144,7 @@ function Icosphere.vertices(volume: IcosphereVolume): { Point.VertexPoint }
 	local map: { [number]: true? } = {}
 	for _, face in volume.Faces do
 		for _, vertex in Face.Triangle.vertices(face) do
-			local id = Point.Vertex.getId(vertex)
+			local id = vertex.Id
 			if map[id] then continue end
 			map[id] = true
 			table.insert(vertices, vertex)
@@ -167,23 +168,6 @@ function Icosphere.faces(volume: IcosphereVolume): { Face.TriangleFace } return 
 
 function Icosphere.cframe(volume: IcosphereVolume): CFrame return volume.Center end
 
-function Icosphere.getId(volume: IcosphereVolume): number
-	return Util.cantor3Pair(
-		Util.cantorCFrame(volume.Center),
-		math.ceil(volume.Diameter / CONSTANTS.FUZZY_EQ.LENGTH),
-		volume.Subdivisions
-	)
-end
-
-function Icosphere.hash(volume: IcosphereVolume): string return `VR{Icosphere.getId(volume)}` end
-
-function Icosphere.eq(a: IcosphereVolume, b: IcosphereVolume): boolean
-	if a.Type ~= b.Type then return false end
-	if not Point.Any.eq(Point.Rotated.new(a.Center), Point.Rotated.new(b.Center)) then return false end
-	if math.abs(a.Diameter - b.Diameter) > CONSTANTS.FUZZY_EQ.LENGTH then return false end
-	if a.Subdivisions ~= b.Subdivisions then return false end
-
-	return true
-end
+function Icosphere.hash(volume: IcosphereVolume): string return `VR{volume.Id}` end
 
 return Icosphere

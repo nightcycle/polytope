@@ -8,18 +8,21 @@ local Line = require(script.Parent.Line)
 -- Types
 export type RectangleFace = {
 	Type: "Rectangle",
+	Id: number,
 	Center: CFrame,
 	Height: number,
 	Width: number,
 }
 export type TriangleFace = {
 	Type: "Triangle",
+	Id: number,
 	P1: Point.VertexPoint,
 	P2: Point.VertexPoint,
 	P3: Point.VertexPoint,
 }
 export type RegularNGonFace = {
 	Type: "RegularNGon",
+	Id: number,
 	Center: CFrame,
 	Diameter: number,
 	SideCount: number,
@@ -28,6 +31,7 @@ export type RegularNGonFace = {
 }
 export type QuadFace = {
 	Type: "Quad",
+	Id: number,
 	T1: TriangleFace,
 	T2: TriangleFace,
 	Flat: boolean,

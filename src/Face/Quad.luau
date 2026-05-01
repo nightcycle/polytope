@@ -22,6 +22,7 @@ local Quad = {}
 function Quad.new(q1: Point.VertexPoint, q2: Point.BasicPoint, q3: Point.VertexPoint, q4: Point.BasicPoint): QuadFace
 	local face = {
 		Type = "Quad" :: "Quad",
+		Id = Util.cantorPairUnordered(Util.cantorPair(q1.Id, q2.Id), Util.cantorPair(q3.Id, q4.Id)),
 		T1 = Triangle.new(q1, Point.Vertex.new(q2.Position, q1.Normal), Point.Vertex.new(q4.Position, q1.Normal)),
 		T2 = Triangle.new(q3, Point.Vertex.new(q4.Position, q3.Normal), Point.Vertex.new(q2.Position, q3.Normal)),
 		Flat = false,
@@ -53,16 +54,6 @@ function Quad.fill(face: QuadFace, thickness: number?): FaceUtil.FillResult
 		CFrames = cfs,
 		Parts = parts,
 	}
-end
-
-function Quad.eq(a: QuadFace, b: QuadFace): boolean
-	if a.Type ~= b.Type then return false end
-	if Triangle.eq(a.T1, b.T1) then
-		if Triangle.eq(a.T2, b.T2) then return true end
-	elseif Triangle.eq(a.T1, b.T2) then
-		if Triangle.eq(a.T2, b.T1) then return true end
-	end
-	return false
 end
 
 function Quad.magnitude(face: QuadFace): number return Triangle.magnitude(face.T1) + Triangle.magnitude(face.T2) end
@@ -223,14 +214,7 @@ function Quad.vertices(face: QuadFace): { Point.VertexPoint }
 	}
 end
 
-function Quad.getId(face: QuadFace): number
-	return Util.cantorPairUnordered(
-		Util.cantorPair(Point.Vertex.getId(face.T1.P1), Point.Vertex.getId(face.T1.P2)),
-		Util.cantorPair(Point.Vertex.getId(face.T2.P1), Point.Vertex.getId(face.T2.P2))
-	)
-end
-
-function Quad.hash(face: QuadFace): string return `FQ{Quad.getId(face)}` end
+function Quad.hash(face: QuadFace): string return `FQ{face.Id}` end
 
 function Quad.edges(face: QuadFace): { Line.StraightLine }
 	local points = Quad.vertices(face)

@@ -92,6 +92,7 @@ function RegularIcosahedron.new(cf: CFrame, diameter: number): RegularIcosahedro
 
 	local out = {
 		Type = "RegularIcosahedron" :: "RegularIcosahedron",
+		Id = Util.cantorPair(Util.cantorCFrame(cf), math.ceil(diameter / CONSTANTS.FUZZY_EQ.LENGTH)),
 		Center = cf,
 		Diameter = diameter,
 		Vertices = verts,
@@ -131,13 +132,9 @@ function RegularIcosahedron.fill(volume: RegularIcosahedronVolume, thickness: nu
 	}
 end
 
-function RegularIcosahedron.getId(volume: RegularIcosahedronVolume): number
-	return Util.cantorPair(Util.cantorCFrame(volume.Center), math.ceil(volume.Diameter / CONSTANTS.FUZZY_EQ.LENGTH))
-end
-
 function RegularIcosahedron.cframe(volume: RegularIcosahedronVolume): CFrame return volume.Center end
 
-function RegularIcosahedron.hash(volume: RegularIcosahedronVolume): string return `VR{RegularIcosahedron.getId(volume)}` end
+function RegularIcosahedron.hash(volume: RegularIcosahedronVolume): string return `VR{volume.Id}` end
 
 function RegularIcosahedron.magnitude(volume: RegularIcosahedronVolume): number
 	local R = volume.Diameter / 2
@@ -153,14 +150,6 @@ function RegularIcosahedron.debug(volume: RegularIcosahedronVolume): { Instance 
 	end
 
 	return out
-end
-
-function RegularIcosahedron.eq(a: RegularIcosahedronVolume, b: RegularIcosahedronVolume): boolean
-	if a.Type ~= b.Type then return false end
-	if not Point.Any.eq(Point.Rotated.new(a.Center), Point.Rotated.new(b.Center)) then return false end
-	if math.abs(a.Diameter - b.Diameter) > CONSTANTS.FUZZY_EQ.LENGTH then return false end
-
-	return true
 end
 
 return RegularIcosahedron

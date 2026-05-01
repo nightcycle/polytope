@@ -20,22 +20,13 @@ local Straight = {}
 function Straight.new(p1: Point.VertexPoint, p2: Point.VertexPoint): StraightLine
 	local out = {
 		Type = "Straight" :: "Straight",
+		Id = Util.cantorPairUnordered(p1.Id, p2.Id),
 		P1 = p1,
 		P2 = p2,
 		Offset = p2.Position - p1.Position,
 	} :: StraightLine
 	table.freeze(out)
 	return out :: StraightLine
-end
-
-function Straight.eq(a: StraightLine, b: StraightLine): boolean
-	if a.Type ~= b.Type then return false end
-	if Point.Vertex.eq(a.P1, b.P1) then
-		return Point.Vertex.eq(a.P2, b.P2)
-	elseif Point.Vertex.eq(a.P1, b.P2) then
-		return Point.Vertex.eq(a.P2, b.P1)
-	end
-	return false
 end
 
 function Straight.magnitude(line: StraightLine): number return line.Offset.Magnitude end
@@ -109,10 +100,7 @@ function Straight.intersection(a: StraightLine, b: StraightLine, epsilon: number
 	return closestPoints.A.Position:Lerp(closestPoints.B.Position, 0.5)
 end
 
-function Straight.getId(line: StraightLine): number
-	return Util.cantorPairUnordered(Point.Vertex.getId(line.P1), Point.Vertex.getId(line.P2))
-end
-function Straight.hash(line: StraightLine) return `LS{Straight.getId(line)}` end
+function Straight.hash(line: StraightLine) return `LS{line.Id}` end
 
 function Straight.debug(line: StraightLine): { Instance }
 	local out: { Instance } = {}

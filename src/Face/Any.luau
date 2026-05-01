@@ -35,25 +35,6 @@ function Any.fill(face: Face, thickness: number?): FaceUtil.FillResult
 	end
 end
 
-function Any.eq(a: Face, b: Face): boolean
-	if a.Type ~= b.Type then return false end
-	if a.Type == "Triangle" then
-		assert(b.Type == "Triangle", `bad b type: "{b.Type}"`)
-		return Triangle.eq(a, b)
-	elseif a.Type == "Quad" then
-		assert(b.Type == "Quad", `bad b type: "{b.Type}"`)
-		return Quad.eq(a, b)
-	elseif a.Type == "Rectangle" then
-		assert(b.Type == "Rectangle", `bad b type: "{b.Type}"`)
-		return Rectangle.eq(a, b)
-	elseif a.Type == "RegularNGon" then
-		assert(b.Type == "RegularNGon", `bad b type: "{b.Type}"`)
-		return RegularNGon.eq(a, b)
-	else
-		error(`bad type: "{a.Type}"`)
-	end
-end
-
 function Any.normal(face: Face): Vector3
 	if face.Type == "Triangle" then
 		return Triangle.normal(face)
@@ -76,20 +57,6 @@ function Any.hash(face: Face): string
 		return Rectangle.hash(face)
 	elseif face.Type == "RegularNGon" then
 		return RegularNGon.hash(face)
-	else
-		error(`bad type: "{face.Type}"`)
-	end
-end
-
-function Any.getId(face: Face): number
-	if face.Type == "Triangle" then
-		return Triangle.getId(face)
-	elseif face.Type == "Quad" then
-		return Quad.getId(face)
-	elseif face.Type == "Rectangle" then
-		return Rectangle.getId(face)
-	elseif face.Type == "RegularNGon" then
-		return RegularNGon.getId(face)
 	else
 		error(`bad type: "{face.Type}"`)
 	end
@@ -236,7 +203,7 @@ function Any.sharedEdges(a: Face, b: Face): { Line.StraightLine }
 	local out: { Line.StraightLine } = {}
 	for i, aEdge in aEdges do
 		for j, bEdge in bEdges do
-			if Line.Any.eq(aEdge, bEdge) then
+			if aEdge.Id == bEdge.Id then
 				table.insert(out, aEdge)
 				break
 			end
@@ -271,7 +238,7 @@ function Any.sharedVertices(
 	for i, aPoint in aPoints do
 		for j, bPoint in bPoints do
 			if includeNormals then
-				if Point.Any.eq(aPoint, bPoint) then
+				if aPoint.Id == bPoint.Id then
 					out[Point.Basic.new(aPoint.Position)] = {
 						A = aPoint,
 						B = bPoint,

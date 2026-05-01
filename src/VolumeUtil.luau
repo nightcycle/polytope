@@ -8,6 +8,7 @@ local Face = require(script.Parent.Face)
 -- Types
 export type BoxVolume = {
 	Type: "Box",
+	Id: number,
 	Faces: { [Enum.NormalId]: Face.RectangleFace },
 	Vertices: { Point.VertexPoint },
 	Edges: { Line.StraightLine },
@@ -16,6 +17,7 @@ export type BoxVolume = {
 }
 export type RegularIcosahedronVolume = {
 	Type: "RegularIcosahedron",
+	Id: number,
 	Faces: { Face.TriangleFace },
 	Vertices: { Point.VertexPoint },
 	Edges: { Line.StraightLine },
@@ -24,6 +26,7 @@ export type RegularIcosahedronVolume = {
 }
 export type IcosphereVolume = {
 	Type: "Icosphere",
+	Id: number,
 	Center: CFrame,
 	Diameter: number,
 	Subdivisions: number,

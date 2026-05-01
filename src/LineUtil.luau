@@ -6,12 +6,14 @@ local Point = require(script.Parent.Point)
 -- Types
 export type StraightLine = {
 	Type: "Straight",
+	Id: number,
 	P1: Point.VertexPoint,
 	P2: Point.VertexPoint,
 	Offset: Vector3,
 }
 export type QuadraticBezierLine = {
 	Type: "QuadraticBezier",
+	Id: number,
 	P1: Point.VertexPoint,
 	P2: Point.VertexPoint,
 	Intersection: Point.BasicPoint,

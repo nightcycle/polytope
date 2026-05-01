@@ -18,18 +18,19 @@ local CONSTANTS = require(script.Parent.Parent.CONSTANTS)
 -- Class
 local RegularNGon = {}
 
-function RegularNGon.new(center: Point.RotatedPoint, diameter: number, sideCount: number): RegularNGonFace
+function RegularNGon.new(center: CFrame, diameter: number, sideCount: number): RegularNGonFace
 	local vertices = {}
 	for i = 1, sideCount do
 		local angle = math.rad((i - 1) * 360 / sideCount)
 		vertices[i] = Point.Vertex.new(
-			(center.CFrame * CFrame.new(math.sin(angle) * diameter / 2, math.cos(angle) * diameter / 2, 0)).Position,
-			center.Normal
+			(center * CFrame.new(math.sin(angle) * diameter / 2, math.cos(angle) * diameter / 2, 0)).Position,
+			center.LookVector
 		)
 	end
 
 	local face = {
 		Type = "RegularNGon" :: "RegularNGon",
+		Id = Util.cantor3Pair(Util.cantorCFrame(center), sideCount, math.floor(diameter / CONSTANTS.FUZZY_EQ.LENGTH)),
 		Triangles = {},
 		Center = center,
 		Vertices = vertices,
@@ -38,7 +39,7 @@ function RegularNGon.new(center: Point.RotatedPoint, diameter: number, sideCount
 	}
 
 	if #vertices > 1 then
-		local centerV = Point.Vertex.new(center.Position, center.Normal)
+		local centerV = Point.Vertex.new(center.Position, center.LookVector)
 		for i = 1, #vertices do
 			local currentV = vertices[i]
 			local nextV = vertices[i + 1] or vertices[1]
@@ -64,17 +65,6 @@ function RegularNGon.fill(face: RegularNGonFace, thickness: number?): FaceUtil.F
 		CFrames = cfList,
 		Parts = partList,
 	}
-end
-
-function RegularNGon.eq(a: RegularNGonFace, b: RegularNGonFace): boolean
-	if a.Type ~= b.Type then return false end
-	if #a.Triangles ~= #b.Triangles then return false end
-	for i = 1, #a.Triangles do
-		local aTri = a.Triangles[i]
-		local bTri = b.Triangles[i]
-		if not Triangle.eq(aTri, bTri) then return false end
-	end
-	return true
 end
 
 function RegularNGon.normal(face: RegularNGonFace): Vector3 return face.Center.LookVector end
@@ -254,14 +244,6 @@ function RegularNGon.edges(face: RegularNGonFace): { Line.StraightLine }
 	return out
 end
 
-function RegularNGon.getId(face: RegularNGonFace): number
-	return Util.cantor3Pair(
-		Util.cantorCFrame(face.Center),
-		face.SideCount,
-		math.floor(face.Diameter / CONSTANTS.FUZZY_EQ.LENGTH)
-	)
-end
-
-function RegularNGon.hash(face: RegularNGonFace): string return `FRN{RegularNGon.getId(face)}` end
+function RegularNGon.hash(face: RegularNGonFace): string return `FRN{face.Id}` end
 
 return RegularNGon

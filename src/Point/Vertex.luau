@@ -9,7 +9,6 @@ local Util = require(script.Parent.Parent.Util)
 -- Types
 export type VertexPoint = PointUtil.VertexPoint
 -- Constants
-local CONSTANTS = require(script.Parent.Parent.CONSTANTS)
 -- Variables
 -- References
 -- Private Functions
@@ -19,6 +18,7 @@ local Vertex = {}
 function Vertex.new(position: Vector3, normal: Vector3): VertexPoint
 	local out = {
 		Type = "Vertex" :: "Vertex",
+		Id = Util.cantorCFrame(CFrame.lookAlong(position, normal)),
 		Position = position,
 		Normal = normal,
 	}
@@ -26,18 +26,11 @@ function Vertex.new(position: Vector3, normal: Vector3): VertexPoint
 	return out :: VertexPoint
 end
 
-function Vertex.eq(a: VertexPoint, b: VertexPoint): boolean
-	if a.Type ~= b.Type then return false end
-	return Util.positionEq(a.Position, b.Position) and a.Normal:FuzzyEq(b.Normal, CONSTANTS.FUZZY_EQ.EPSILON)
-end
-
 function Vertex.lerp(a: VertexPoint, b: VertexPoint, alpha: number): VertexPoint
 	return Vertex.new(a.Position:Lerp(b.Position, alpha), a.Normal:Lerp(b.Normal, alpha).Unit)
 end
-function Vertex.getId(point: VertexPoint): number
-	return Util.cantorCFrame(CFrame.lookAlong(point.Position, point.Normal))
-end
-function Vertex.hash(point: VertexPoint): string return `PV{Vertex.getId(point)}` end
+
+function Vertex.hash(point: VertexPoint): string return `PV{point.Id}` end
 
 function Vertex.debug(point: VertexPoint): { Instance }
 	local out: { Instance } = {}

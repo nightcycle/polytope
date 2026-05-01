@@ -9,7 +9,6 @@ local Util = require(script.Parent.Parent.Util)
 -- Types
 export type RotatedPoint = PointUtil.RotatedPoint
 -- Constants
-local CONSTANTS = require(script.Parent.Parent.CONSTANTS)
 -- Variables
 -- References
 -- Private Functions
@@ -19,6 +18,7 @@ local Rotated = {}
 function Rotated.new(cf: CFrame): RotatedPoint
 	local out = {
 		Type = "Rotated" :: "Rotated",
+		Id = Util.cantorCFrame(cf),
 		CFrame = cf,
 		Normal = -cf.LookVector,
 		Up = cf.UpVector,
@@ -28,18 +28,10 @@ function Rotated.new(cf: CFrame): RotatedPoint
 	return out :: RotatedPoint
 end
 
-function Rotated.eq(a: RotatedPoint, b: RotatedPoint): boolean
-	if a.Type ~= b.Type then return false end
-	return Util.positionEq(a.Position, b.Position)
-		and a.Normal:FuzzyEq(b.Normal, CONSTANTS.FUZZY_EQ.EPSILON)
-		and a.Up:FuzzyEq(b.Up, CONSTANTS.FUZZY_EQ.EPSILON)
-end
-
 function Rotated.lerp(a: RotatedPoint, b: RotatedPoint, alpha: number): RotatedPoint
 	return Rotated.new(a.CFrame:Lerp(b.CFrame, alpha))
 end
-function Rotated.getId(point: RotatedPoint): number return Util.cantorCFrame(point.CFrame) end
-function Rotated.hash(point: RotatedPoint): string return `PR{Rotated.getId(point)}` end
+function Rotated.hash(point: RotatedPoint): string return `PR{point.Id}` end
 
 function Rotated.debug(point: RotatedPoint): { Instance }
 	local out: { Instance } = {}

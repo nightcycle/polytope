@@ -21,6 +21,7 @@ local Triangle = {}
 function Triangle.new(p1: Point.VertexPoint, p2: Point.VertexPoint, p3: Point.VertexPoint): TriangleFace
 	local face = {
 		Type = "Triangle" :: "Triangle",
+		Id = Util.cantor3PairUnordered(p1.Id, p2.Id, p3.Id),
 		P1 = p1,
 		P2 = p2,
 		P3 = p3,
@@ -68,30 +69,6 @@ function Triangle.center(face: TriangleFace): Vector3
 	return (face.P1.Position + face.P2.Position + face.P3.Position) / 3
 end
 
-function Triangle.eq(a: TriangleFace, b: TriangleFace): boolean
-	if a.Type ~= b.Type then return false end
-	if Point.Vertex.eq(a.P1, b.P1) then
-		if Point.Vertex.eq(a.P2, b.P2) then
-			return Point.Vertex.eq(a.P3, b.P3)
-		elseif Point.Vertex.eq(a.P2, b.P3) then
-			return Point.Vertex.eq(a.P3, b.P2)
-		end
-	elseif Point.Vertex.eq(a.P2, b.P1) then
-		if Point.Vertex.eq(a.P1, b.P2) then
-			return Point.Vertex.eq(a.P3, b.P3)
-		elseif Point.Vertex.eq(a.P1, b.P3) then
-			return Point.Vertex.eq(a.P3, b.P2)
-		end
-	elseif Point.Vertex.eq(a.P3, b.P1) then
-		if Point.Vertex.eq(a.P2, b.P2) then
-			return Point.Vertex.eq(a.P1, b.P3)
-		elseif Point.Vertex.eq(a.P2, b.P3) then
-			return Point.Vertex.eq(a.P1, b.P2)
-		end
-	end
-	return false
-end
-
 function Triangle.magnitude(face: TriangleFace): number
 	return Util.getTriangleArea(face.P1.Position, face.P2.Position, face.P3.Position)
 end
@@ -118,13 +95,7 @@ function Triangle.fit(
 	if containmentType == "Rectangle" then
 		local rectCF, width, height =
 			FaceUtil.getMaxRect(CFrame.fromMatrix(center, right, up), Triangle.vertices(face) :: { Point.Point })
-		local rectangle: FaceUtil.RectangleFace = {
-			Type = "Rectangle",
-			Center = rectCF,
-			Height = height,
-			Width = width,
-		}
-		return rectangle
+		return Rectangle.new(rectCF, height, width)
 	else
 		error(`unsupported containment type: "{containmentType}"`)
 	end
@@ -206,15 +177,7 @@ function Triangle.edges(face: TriangleFace): { Line.StraightLine }
 	}
 end
 
-function Triangle.getId(face: TriangleFace): number
-	return Util.cantor3PairUnordered(
-		Point.Vertex.getId(face.P1),
-		Point.Vertex.getId(face.P2),
-		Point.Vertex.getId(face.P2)
-	)
-end
-
-function Triangle.hash(face: TriangleFace): string return `FT{Triangle.getId(face)}` end
+function Triangle.hash(face: TriangleFace): string return `FT{face.Id}` end
 
 function Triangle.vertices(face: TriangleFace): { Point.VertexPoint }
 	return {

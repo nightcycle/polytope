@@ -14,19 +14,6 @@ export type Line = LineUtil.Line
 -- Class
 local Any = {}
 
-function Any.eq(a: Line, b: Line): boolean
-	if a.Type ~= b.Type then return false end
-	if a.Type == "Straight" then
-		assert(b.Type == "Straight", `bad b type: {b.Type}`)
-		return Straight.eq(a, b)
-	elseif a.Type == "QuadraticBezier" then
-		assert(b.Type == "QuadraticBezier", `bad b type: {b.Type}`)
-		return QuadraticBezier.eq(a, b)
-	else
-		error(`bad type: "{a.Type}"`)
-	end
-end
-
 function Any.magnitude(line: Line): number
 	if line.Type == "Straight" then
 		return Straight.magnitude(line)
@@ -42,16 +29,6 @@ function Any.hash(line: Line): string
 		return Straight.hash(line)
 	elseif line.Type == "QuadraticBezier" then
 		return QuadraticBezier.hash(line)
-	else
-		error(`bad type: "{line.Type}"`)
-	end
-end
-
-function Any.getId(line: Line): number
-	if line.Type == "Straight" then
-		return Straight.getId(line)
-	elseif line.Type == "QuadraticBezier" then
-		return QuadraticBezier.getId(line)
 	else
 		error(`bad type: "{line.Type}"`)
 	end

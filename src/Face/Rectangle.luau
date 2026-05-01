@@ -20,6 +20,11 @@ local Rectangle = {}
 function Rectangle.new(center: CFrame, height: number, width: number): RectangleFace
 	local face = {
 		Type = "Rectangle" :: "Rectangle",
+		Id = Util.cantor3Pair(
+			Util.cantorCFrame(center),
+			math.floor(width / CONSTANTS.FUZZY_EQ.LENGTH),
+			math.floor(height / CONSTANTS.FUZZY_EQ.LENGTH)
+		),
 		Center = center,
 		Height = height,
 		Width = width,
@@ -141,14 +146,6 @@ function Rectangle.fill(face: RectangleFace, thickness: number?): FaceUtil.FillR
 	}
 end
 
-function Rectangle.eq(a: RectangleFace, b: RectangleFace): boolean
-	if a.Type ~= b.Type then return false end
-	if not Point.Any.eq(Point.Rotated.new(a.Center), Point.Rotated.new(b.Center)) then return false end
-	if math.abs(a.Height - b.Height) > CONSTANTS.FUZZY_EQ.LENGTH then return false end
-	if math.abs(a.Width - b.Width) > CONSTANTS.FUZZY_EQ.LENGTH then return false end
-	return true
-end
-
 function Rectangle.magnitude(face: RectangleFace): number return face.Width * face.Height end
 
 function Rectangle.isWithin(face: RectangleFace, point: Vector3): boolean
@@ -199,14 +196,6 @@ function Rectangle.edges(face: RectangleFace): { Line.StraightLine }
 	}
 end
 
-function Rectangle.getId(face: RectangleFace): number
-	return Util.cantor3Pair(
-		Util.cantorCFrame(face.Center),
-		math.floor(face.Width / CONSTANTS.FUZZY_EQ.LENGTH),
-		math.floor(face.Height / CONSTANTS.FUZZY_EQ.LENGTH)
-	)
-end
-
-function Rectangle.hash(face: RectangleFace): string return `FR{Rectangle.getId(face)}` end
+function Rectangle.hash(face: RectangleFace): string return `FR{face.Id}` end
 
 return Rectangle

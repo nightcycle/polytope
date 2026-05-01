@@ -33,22 +33,6 @@ function Any.fill(volume: Volume, thickness: number?): VolumeUtil.FillResult
 	end
 end
 
-function Any.eq(a: Volume, b: Volume): boolean
-	if a.Type ~= b.Type then return false end
-	if a.Type == "Box" then
-		assert(b.Type == "Box", `bad type`)
-		return Box.eq(a, b)
-	elseif a.Type == "Icosphere" then
-		assert(b.Type == "Icosphere", `bad type`)
-		return Icosphere.eq(a, b)
-	elseif a.Type == "RegularIcosahedron" then
-		assert(b.Type == "RegularIcosahedron", `bad type`)
-		return RegularIcosahedron.eq(a, b)
-	else
-		error(`bad type: "{a.Type}"`)
-	end
-end
-
 function Any.hash(volume: Volume): string
 	if volume.Type == "Box" then
 		return Box.hash(volume)
@@ -56,18 +40,6 @@ function Any.hash(volume: Volume): string
 		return Icosphere.hash(volume)
 	elseif volume.Type == "RegularIcosahedron" then
 		return RegularIcosahedron.hash(volume)
-	else
-		error(`bad type: "{volume.Type}"`)
-	end
-end
-
-function Any.getId(volume: Volume): number
-	if volume.Type == "Box" then
-		return Box.getId(volume)
-	elseif volume.Type == "Icosphere" then
-		return Icosphere.getId(volume)
-	elseif volume.Type == "RegularIcosahedron" then
-		return RegularIcosahedron.getId(volume)
 	else
 		error(`bad type: "{volume.Type}"`)
 	end

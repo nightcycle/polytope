@@ -8,7 +8,6 @@ local Util = require(script.Parent.Parent.Util)
 -- Types
 export type QuadraticBezierLine = LineUtil.QuadraticBezierLine
 -- Constants
-local CONSTANTS = require(script.Parent.Parent.CONSTANTS)
 -- Variables
 -- References
 -- Private Functions
@@ -22,23 +21,13 @@ function QuadraticBezier.new(
 ): QuadraticBezierLine
 	local out = {
 		Type = "QuadraticBezier" :: "QuadraticBezier",
+		Id = Util.cantorPair(Util.cantorPairUnordered(p1.Id, p2.Id), intersection.Id),
 		P1 = p1,
 		P2 = p2,
 		Intersection = intersection,
 	} :: QuadraticBezierLine
 	table.freeze(out)
 	return out :: QuadraticBezierLine
-end
-
-function QuadraticBezier.eq(a: QuadraticBezierLine, b: QuadraticBezierLine): boolean
-	if a.Type ~= b.Type then return false end
-	if not Point.Basic.eq(a.Intersection, b.Intersection) then return false end
-	if Point.Vertex.eq(a.P1, b.P1) then
-		return Point.Vertex.eq(a.P2, b.P2)
-	elseif Point.Vertex.eq(a.P1, b.P2) then
-		return Point.Vertex.eq(a.P2, b.P1)
-	end
-	return false
 end
 
 function QuadraticBezier.magnitude(line: QuadraticBezierLine): number
@@ -53,14 +42,7 @@ function QuadraticBezier.debug(line: QuadraticBezierLine): { Instance }
 	return out
 end
 
-function QuadraticBezier.getId(line: QuadraticBezierLine)
-	return Util.cantorPair(
-		Util.cantorPairUnordered(Point.Vertex.getId(line.P1), Point.Vertex.getId(line.P2)),
-		Util.cantorV3((line.Intersection.Position / CONSTANTS.FUZZY_EQ.LENGTH):Floor())
-	)
-end
-
-function QuadraticBezier.hash(line: QuadraticBezierLine) return `LQ{QuadraticBezier.getId(line)}` end
+function QuadraticBezier.hash(line: QuadraticBezierLine) return `LQ{line.Id}` end
 
 function QuadraticBezier.pointAt(line: QuadraticBezierLine, t: number): Vector3
 	local u = 1 - t

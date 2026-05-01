@@ -19,26 +19,17 @@ local Basic = {}
 function Basic.new(position: Vector3): BasicPoint
 	local out = {
 		Type = "Basic" :: "Basic",
+		Id = Util.cantorV3((position / CONSTANTS.FUZZY_EQ.LENGTH):Floor()),
 		Position = position,
 	}
 	table.freeze(out)
 	return out :: BasicPoint
 end
-
-function Basic.eq(a: BasicPoint, b: BasicPoint): boolean
-	if a.Type ~= b.Type then return false end
-	return Util.positionEq(a.Position, b.Position)
-end
-
 function Basic.lerp(a: BasicPoint, b: BasicPoint, alpha: number): BasicPoint
 	return Basic.new(a.Position:Lerp(b.Position, alpha))
 end
 
-function Basic.getId(point: BasicPoint): number
-	return Util.cantorV3((point.Position / CONSTANTS.FUZZY_EQ.LENGTH):Floor())
-end
-
-function Basic.hash(point: BasicPoint): string return `PB{Basic.getId(point)}` end
+function Basic.hash(point: BasicPoint): string return `PB{point.Id}` end
 
 function Basic.debug(point: BasicPoint): { Instance }
 	local out: { Instance } = {}
