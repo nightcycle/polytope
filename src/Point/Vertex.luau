@@ -9,6 +9,7 @@ local Util = require(script.Parent.Parent.Util)
 -- Types
 export type VertexPoint = PointUtil.VertexPoint
 -- Constants
+local CONSTANTS = require(script.Parent.Parent.CONSTANTS)
 -- Variables
 -- References
 -- Private Functions
@@ -39,6 +40,23 @@ function Vertex.debug(point: VertexPoint): { Instance }
 		table.insert(out, newPoint)
 	end
 	return out
+end
+
+function Vertex.addMeshVertex(point: VertexPoint, mesh: EditableMesh, origin: CFrame): number
+	return mesh:AddVertex(origin:PointToObjectSpace(point.Position))
+end
+
+function Vertex.addMeshNormal(point: VertexPoint, mesh: EditableMesh, origin: CFrame): number
+	return mesh:AddNormal(origin:VectorToObjectSpace(point.Normal))
+end
+
+function Vertex.findMeshVertex(point: VertexPoint, mesh: EditableMesh, origin: CFrame): number?
+	local vId = mesh:FindClosestVertex(origin:PointToObjectSpace(point.Position))
+	if vId and vId > 0 then
+		local vPos = origin:PointToWorldSpace(mesh:GetPosition(vId))
+		if (vPos - point.Position).Magnitude <= CONSTANTS.FUZZY_EQ.LENGTH then return vId end
+	end
+	return nil
 end
 
 return Vertex

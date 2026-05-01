@@ -187,4 +187,46 @@ function Triangle.vertices(face: TriangleFace): { Point.VertexPoint }
 	}
 end
 
+function Triangle.addMeshFace(face: TriangleFace, mesh: EditableMesh, origin: CFrame): number
+	local vId1 = Point.Vertex.findMeshVertex(face.P1, mesh, origin) or Point.Vertex.addMeshVertex(face.P1, mesh, origin)
+	local vId2 = Point.Vertex.findMeshVertex(face.P2, mesh, origin) or Point.Vertex.addMeshVertex(face.P2, mesh, origin)
+	local vId3 = Point.Vertex.findMeshVertex(face.P3, mesh, origin) or Point.Vertex.addMeshVertex(face.P3, mesh, origin)
+	local fId = mesh:AddTriangle(vId1, vId2, vId3)
+	mesh:SetFaceNormals(fId, {
+		Point.Vertex.addMeshNormal(face.P1, mesh, origin),
+		Point.Vertex.addMeshNormal(face.P2, mesh, origin),
+		Point.Vertex.addMeshNormal(face.P3, mesh, origin),
+	})
+	return fId
+end
+
+function Triangle.removeMeshFace(face: TriangleFace, mesh: EditableMesh, origin: CFrame): boolean
+	local fId = Triangle.findMeshFace(face, mesh, origin)
+	if fId then
+		mesh:RemoveFace(fId)
+		return true
+	end
+	return false
+end
+
+function Triangle.findMeshFace(face: TriangleFace, mesh: EditableMesh, origin: CFrame): number?
+	local vId1 = Point.Vertex.findMeshVertex(face.P1, mesh, origin)
+	local vId2 = Point.Vertex.findMeshVertex(face.P2, mesh, origin)
+	local vId3 = Point.Vertex.findMeshVertex(face.P3, mesh, origin)
+	if not vId1 or not vId2 or not vId3 then return nil end
+	local faceMap: { [number]: number } = {}
+	for i, fId in mesh:GetVertexFaces(vId1) do
+		faceMap[fId] = 1
+	end
+	for i, fId in mesh:GetVertexFaces(vId2) do
+		if not faceMap[fId] then continue end
+		faceMap[fId] += 1
+	end
+	for i, fId in mesh:GetVertexFaces(vId3) do
+		if not faceMap[fId] then continue end
+		if faceMap[fId] == 2 then return fId end
+	end
+	return nil
+end
+
 return Triangle

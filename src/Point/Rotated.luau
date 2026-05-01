@@ -9,6 +9,7 @@ local Util = require(script.Parent.Parent.Util)
 -- Types
 export type RotatedPoint = PointUtil.RotatedPoint
 -- Constants
+local CONSTANTS = require(script.Parent.Parent.CONSTANTS)
 -- Variables
 -- References
 -- Private Functions
@@ -40,6 +41,23 @@ function Rotated.debug(point: RotatedPoint): { Instance }
 		table.insert(out, newCF)
 	end
 	return out
+end
+
+function Rotated.addMeshVertex(point: RotatedPoint, mesh: EditableMesh, origin: CFrame): number
+	return mesh:AddVertex(origin:PointToObjectSpace(point.Position))
+end
+
+function Rotated.addMeshNormal(point: RotatedPoint, mesh: EditableMesh, origin: CFrame): number
+	return mesh:AddNormal(origin:VectorToObjectSpace(point.Normal))
+end
+
+function Rotated.findMeshVertex(point: RotatedPoint, mesh: EditableMesh, origin: CFrame): number?
+	local vId = mesh:FindClosestVertex(origin:PointToObjectSpace(point.Position))
+	if vId and vId > 0 then
+		local vPos = origin:PointToWorldSpace(mesh:GetPosition(vId))
+		if (vPos - point.Position).Magnitude <= CONSTANTS.FUZZY_EQ.LENGTH then return vId end
+	end
+	return nil
 end
 
 return Rotated

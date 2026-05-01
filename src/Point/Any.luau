@@ -77,4 +77,40 @@ function Any.debug(point: Point): { Instance }
 	end
 end
 
+function Any.addMeshVertex(point: Point, mesh: EditableMesh, origin: CFrame): number
+	if point.Type == "Basic" then
+		return Basic.addMeshVertex(point, mesh, origin)
+	elseif point.Type == "Vertex" then
+		return Vertex.addMeshVertex(point, mesh, origin)
+	elseif point.Type == "Rotated" then
+		return Rotated.addMeshVertex(point, mesh, origin)
+	else
+		error(`bad type: "{point.Type}"`)
+	end
+end
+
+function Rotated.addMeshNormal(point: Point, mesh: EditableMesh, origin: CFrame): number?
+	if point.Type == "Basic" then
+		return nil
+	elseif point.Type == "Vertex" then
+		return Vertex.addMeshNormal(point, mesh, origin)
+	elseif point.Type == "Rotated" then
+		return Rotated.addMeshNormal(point, mesh, origin)
+	else
+		error(`bad type: "{point.Type}"`)
+	end
+end
+
+function Any.findMeshVertex(point: Point, mesh: EditableMesh, origin: CFrame): number?
+	if point.Type == "Basic" then
+		return Basic.findMeshVertex(point, mesh, origin)
+	elseif point.Type == "Vertex" then
+		return Vertex.findMeshVertex(point, mesh, origin)
+	elseif point.Type == "Rotated" then
+		return Rotated.findMeshVertex(point, mesh, origin)
+	else
+		error(`bad type: "{point.Type}"`)
+	end
+end
+
 return Any
