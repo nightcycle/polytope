@@ -5,6 +5,7 @@
 local Point = require(script.Parent.Parent.Point)
 local Line = require(script.Parent.Parent.Line)
 local FaceUtil = require(script.Parent.Parent.FaceUtil)
+local Util = require(script.Parent.Parent.Util)
 local InstanceCache = require(script.Parent.Parent.InstanceCache)
 -- Types
 export type RectangleFace = FaceUtil.RectangleFace
@@ -197,5 +198,15 @@ function Rectangle.edges(face: RectangleFace): { Line.StraightLine }
 		Line.Straight.new(vert4, vert1),
 	}
 end
+
+function Rectangle.getId(face: RectangleFace): number
+	return Util.cantor3Pair(
+		Util.cantorCFrame(face.Center),
+		math.floor(face.Width / CONSTANTS.FUZZY_EQ.LENGTH),
+		math.floor(face.Height / CONSTANTS.FUZZY_EQ.LENGTH)
+	)
+end
+
+function Rectangle.hash(face: RectangleFace): string return `FR{Rectangle.getId(face)}` end
 
 return Rectangle

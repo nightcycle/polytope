@@ -67,6 +67,33 @@ function Any.normal(face: Face): Vector3
 		error(`bad type: "{face.Type}"`)
 	end
 end
+function Any.hash(face: Face): string
+	if face.Type == "Triangle" then
+		return Triangle.hash(face)
+	elseif face.Type == "Quad" then
+		return Quad.hash(face)
+	elseif face.Type == "Rectangle" then
+		return Rectangle.hash(face)
+	elseif face.Type == "RegularNGon" then
+		return RegularNGon.hash(face)
+	else
+		error(`bad type: "{face.Type}"`)
+	end
+end
+
+function Any.getId(face: Face): number
+	if face.Type == "Triangle" then
+		return Triangle.getId(face)
+	elseif face.Type == "Quad" then
+		return Quad.getId(face)
+	elseif face.Type == "Rectangle" then
+		return Rectangle.getId(face)
+	elseif face.Type == "RegularNGon" then
+		return RegularNGon.getId(face)
+	else
+		error(`bad type: "{face.Type}"`)
+	end
+end
 
 function Any.up(face: Face): Vector3
 	if face.Type == "Triangle" then

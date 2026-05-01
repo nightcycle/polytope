@@ -23,6 +23,7 @@ export type TriangleFace = FaceUtil.TriangleFace
 export type BoxVolume = VolumeUtil.BoxVolume
 export type RegularIcosahedronVolume = VolumeUtil.RegularIcosahedronVolume
 export type IcosphereVolume = VolumeUtil.IcosphereVolume
+export type Volume = VolumeUtil.Volume
 
 -- Constants
 -- Variables

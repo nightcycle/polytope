@@ -21,10 +21,10 @@ export type RotatedPoint = {
 }
 export type Point = VertexPoint | BasicPoint | RotatedPoint
 -- Constants
+
 -- Variables
 -- References
 -- Private Functions
 -- Class
 local Util = {}
-
 return Util

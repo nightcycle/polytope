@@ -223,6 +223,15 @@ function Quad.vertices(face: QuadFace): { Point.VertexPoint }
 	}
 end
 
+function Quad.getId(face: QuadFace): number
+	return Util.cantorPairUnordered(
+		Util.cantorPair(Point.Vertex.getId(face.T1.P1), Point.Vertex.getId(face.T1.P2)),
+		Util.cantorPair(Point.Vertex.getId(face.T2.P1), Point.Vertex.getId(face.T2.P2))
+	)
+end
+
+function Quad.hash(face: QuadFace): string return `FQ{Quad.getId(face)}` end
+
 function Quad.edges(face: QuadFace): { Line.StraightLine }
 	local points = Quad.vertices(face)
 	return {

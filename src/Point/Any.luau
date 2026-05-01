@@ -13,9 +13,7 @@ export type Point = PointUtil.Point
 -- References
 -- Private Functions
 function toFirstCommonAncestor(a: Point, b: Point): (Point, Point)
-	if a.Type == b.Type then
-		return a, b
-	end
+	if a.Type == b.Type then return a, b end
 	if a.Type == "Basic" then
 		return a, Basic.new(b.Position)
 	elseif b.Type == "Basic" then
@@ -34,9 +32,7 @@ end
 local Any = {}
 
 function Any.eq(a: Point, b: Point): boolean
-	if a.Type ~= b.Type then
-		return false
-	end
+	if a.Type ~= b.Type then return false end
 	if a.Type == "Basic" then
 		assert(b.Type == "Basic", `bad b type: {b.Type}`)
 		return Basic.eq(a, b)
@@ -48,6 +44,36 @@ function Any.eq(a: Point, b: Point): boolean
 		return Rotated.eq(a, b)
 	else
 		error(`bad type: "{a.Type}"`)
+	end
+end
+
+function Any.hash(point: Point): string
+	if point.Type == "Basic" then
+		assert(point.Type == "Basic", `bad point type: {point.Type}`)
+		return Basic.hash(point)
+	elseif point.Type == "Vertex" then
+		assert(point.Type == "Vertex", `bad point type: {point.Type}`)
+		return Vertex.hash(point)
+	elseif point.Type == "Rotated" then
+		assert(point.Type == "Rotated", `bad point type: {point.Type}`)
+		return Rotated.hash(point)
+	else
+		error(`bad type: "{point.Type}"`)
+	end
+end
+
+function Any.getId(point: Point): number
+	if point.Type == "Basic" then
+		assert(point.Type == "Basic", `bad point type: {point.Type}`)
+		return Basic.getId(point)
+	elseif point.Type == "Vertex" then
+		assert(point.Type == "Vertex", `bad point type: {point.Type}`)
+		return Vertex.getId(point)
+	elseif point.Type == "Rotated" then
+		assert(point.Type == "Rotated", `bad point type: {point.Type}`)
+		return Rotated.getId(point)
+	else
+		error(`bad type: "{point.Type}"`)
 	end
 end
 

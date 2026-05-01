@@ -8,6 +8,7 @@ local Util = require(script.Parent.Parent.Util)
 -- Types
 export type QuadraticBezierLine = LineUtil.QuadraticBezierLine
 -- Constants
+local CONSTANTS = require(script.Parent.Parent.CONSTANTS)
 -- Variables
 -- References
 -- Private Functions
@@ -51,6 +52,15 @@ function QuadraticBezier.debug(line: QuadraticBezierLine): { Instance }
 	Util.join(out, Point.Any.debug(line.P2))
 	return out
 end
+
+function QuadraticBezier.getId(line: QuadraticBezierLine)
+	return Util.cantorPair(
+		Util.cantorPairUnordered(Point.Vertex.getId(line.P1), Point.Vertex.getId(line.P2)),
+		Util.cantorV3((line.Intersection.Position / CONSTANTS.FUZZY_EQ.LENGTH):Floor())
+	)
+end
+
+function QuadraticBezier.hash(line: QuadraticBezierLine) return `LQ{QuadraticBezier.getId(line)}` end
 
 function QuadraticBezier.pointAt(line: QuadraticBezierLine, t: number): Vector3
 	local u = 1 - t

@@ -11,6 +11,7 @@ local InstanceCache = require(script.Parent.Parent.InstanceCache)
 -- Types
 export type BoxVolume = VolumeUtil.BoxVolume
 -- Constants
+local CONSTANTS = require(script.Parent.Parent.CONSTANTS)
 -- Variables
 -- References
 -- Private Functions
@@ -55,7 +56,7 @@ function Box.new(cf: CFrame, size: Vector3): BoxVolume
 
 	local out: BoxVolume = {
 		Type = "Box" :: "Box",
-		Origin = cf,
+		Center = cf,
 		Size = size,
 		Vertices = {
 			p_xyz,
@@ -151,10 +152,21 @@ function Box.fill(volume: BoxVolume, thickness: number?): VolumeUtil.FillResult
 		part.Size = volume.Size
 		return {
 			Parts = { part },
-			CFrames = { volume.Origin },
+			CFrames = { volume.Center },
 		}
 	end
 end
+
+function Box.getId(volume: BoxVolume): number
+	return Util.cantorPair(
+		Util.cantorCFrame(volume.Center),
+		Util.cantorV3((volume.Size / CONSTANTS.FUZZY_EQ.LENGTH):Floor())
+	)
+end
+
+function Box.cframe(volume: BoxVolume): CFrame return volume.Center end
+
+function Box.hash(volume: BoxVolume): string return `VB{Box.getId(volume)}` end
 
 function Box.magnitude(volume: BoxVolume): number return volume.Size.X * volume.Size.Y * volume.Size.Z end
 
@@ -166,6 +178,15 @@ function Box.debug(volume: BoxVolume): { Instance }
 	end
 
 	return out
+end
+
+function Box.eq(a: BoxVolume, b: BoxVolume): boolean
+	if a.Type ~= b.Type then return false end
+	if not Point.Any.eq(Point.Rotated.new(a.Center), Point.Rotated.new(b.Center)) then return false end
+	if math.abs(a.Size.X - b.Size.X) > CONSTANTS.FUZZY_EQ.LENGTH then return false end
+	if math.abs(a.Size.Y - b.Size.Y) > CONSTANTS.FUZZY_EQ.LENGTH then return false end
+	if math.abs(a.Size.Z - b.Size.Z) > CONSTANTS.FUZZY_EQ.LENGTH then return false end
+	return true
 end
 
 return Box

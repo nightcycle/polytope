@@ -38,6 +38,8 @@ end
 function Rotated.lerp(a: RotatedPoint, b: RotatedPoint, alpha: number): RotatedPoint
 	return Rotated.new(a.CFrame:Lerp(b.CFrame, alpha))
 end
+function Rotated.getId(point: RotatedPoint): number return Util.cantorCFrame(point.CFrame) end
+function Rotated.hash(point: RotatedPoint): string return `PR{Rotated.getId(point)}` end
 
 function Rotated.debug(point: RotatedPoint): { Instance }
 	local out: { Instance } = {}

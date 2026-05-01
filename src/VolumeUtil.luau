@@ -11,7 +11,7 @@ export type BoxVolume = {
 	Faces: { [Enum.NormalId]: Face.RectangleFace },
 	Vertices: { Point.VertexPoint },
 	Edges: { Line.StraightLine },
-	Origin: CFrame,
+	Center: CFrame,
 	Size: Vector3,
 }
 export type RegularIcosahedronVolume = {
@@ -19,12 +19,12 @@ export type RegularIcosahedronVolume = {
 	Faces: { Face.TriangleFace },
 	Vertices: { Point.VertexPoint },
 	Edges: { Line.StraightLine },
-	Origin: CFrame,
+	Center: CFrame,
 	Diameter: number,
 }
 export type IcosphereVolume = {
 	Type: "Icosphere",
-	Origin: CFrame,
+	Center: CFrame,
 	Diameter: number,
 	Subdivisions: number,
 	Faces: { Face.TriangleFace },
@@ -35,7 +35,7 @@ export type FillResult = {
 	CFrames: { CFrame },
 }
 
-export type Volume = BoxVolume
+export type Volume = BoxVolume | IcosphereVolume | RegularIcosahedronVolume
 -- Constants
 -- Variables
 -- References

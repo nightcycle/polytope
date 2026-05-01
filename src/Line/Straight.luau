@@ -109,6 +109,11 @@ function Straight.intersection(a: StraightLine, b: StraightLine, epsilon: number
 	return closestPoints.A.Position:Lerp(closestPoints.B.Position, 0.5)
 end
 
+function Straight.getId(line: StraightLine): number
+	return Util.cantorPairUnordered(Point.Vertex.getId(line.P1), Point.Vertex.getId(line.P2))
+end
+function Straight.hash(line: StraightLine) return `LS{Straight.getId(line)}` end
+
 function Straight.debug(line: StraightLine): { Instance }
 	local out: { Instance } = {}
 	Util.join(out, Point.Any.debug(line.P1))

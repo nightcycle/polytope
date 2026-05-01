@@ -254,4 +254,14 @@ function RegularNGon.edges(face: RegularNGonFace): { Line.StraightLine }
 	return out
 end
 
+function RegularNGon.getId(face: RegularNGonFace): number
+	return Util.cantor3Pair(
+		Util.cantorCFrame(face.Center),
+		face.SideCount,
+		math.floor(face.Diameter / CONSTANTS.FUZZY_EQ.LENGTH)
+	)
+end
+
+function RegularNGon.hash(face: RegularNGonFace): string return `FRN{RegularNGon.getId(face)}` end
+
 return RegularNGon

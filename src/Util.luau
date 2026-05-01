@@ -8,12 +8,53 @@ local CONSTANTS = require(script.Parent.CONSTANTS)
 -- Variables
 -- References
 -- Private Functions
+function hashZigZag(n: number): number
+	if n >= 0 then
+		return 2 * n
+	else
+		return -2 * n - 1
+	end
+end
 -- Class
 local Util = {}
 
-function Util.clampToPlane(origin: Vector3, normal: Vector3, point: Vector3): Vector3
-	--@TODO
-	return Vector3.zero
+-- used for getting unique IDs using properties
+function Util.cantorPairUnordered(a: number, b: number): number
+	local za, zb = hashZigZag(a), hashZigZag(b)
+	local lo, hi = math.min(za, zb), math.max(za, zb)
+	local sum = lo + hi
+	return sum * (sum + 1) / 2 + hi
+end
+function Util.cantorPair(a: number, b: number): number
+	local sum = a + b
+	return sum * (sum + 1) / 2 + b
+end
+function Util.cantor3Pair(a: number, b: number, c: number): number return Util.cantorPair(Util.cantorPair(a, b), c) end
+function Util.cantor4Pair(a: number, b: number, c: number, d: number): number
+	return Util.cantorPair(Util.cantorPair(a, b), Util.cantorPair(c, d))
+end
+
+function Util.cantor3PairUnordered(a: number, b: number, c: number): number
+	return Util.cantorPairUnordered(Util.cantorPairUnordered(a, b), c)
+end
+function Util.cantor4PairUnordered(a: number, b: number, c: number, d: number): number
+	return Util.cantorPairUnordered(Util.cantorPairUnordered(a, b), Util.cantorPairUnordered(c, d))
+end
+
+function Util.cantorV3(v: Vector3): number return Util.cantor3Pair(v.X, v.Y, v.Z) end
+function Util.cantorRotation(orientation: CFrame): number
+	local eX, eY, eZ = orientation:ToEulerAnglesXYZ()
+	return Util.cantorV3((Vector3.new(math.deg(eX), math.deg(eY), math.deg(eZ)) / CONSTANTS.FUZZY_EQ.EPSILON):Floor())
+end
+function Util.cantorPairUnorderedV3(a: Vector3, b: Vector3): number
+	return Util.cantor3Pair(
+		Util.cantorPairUnordered(a.X, b.X),
+		Util.cantorPairUnordered(a.Y, b.Y),
+		Util.cantorPairUnordered(a.Z, b.Z)
+	)
+end
+function Util.cantorCFrame(cf: CFrame)
+	return Util.cantorPair(Util.cantorV3((cf.Position / CONSTANTS.FUZZY_EQ.LENGTH):Floor()), Util.cantorRotation(cf))
 end
 
 function Util.getTriangleArea(a: Vector3, b: Vector3, c: Vector3): number

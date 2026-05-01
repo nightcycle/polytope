@@ -3,6 +3,7 @@
 -- Packages
 -- Modules
 local Point = require(script.Parent.Parent.Point)
+local Line = require(script.Parent.Parent.Line)
 local Face = require(script.Parent.Parent.Face)
 local VolumeUtil = require(script.Parent.Parent.VolumeUtil)
 local RegularIcosahedron = require(script.Parent.RegularIcosahedron)
@@ -11,6 +12,7 @@ local Util = require(script.Parent.Parent.Util)
 export type IcosphereVolume = VolumeUtil.IcosphereVolume
 export type TriangleFace = Face.TriangleFace
 -- Constants
+local CONSTANTS = require(script.Parent.Parent.CONSTANTS)
 -- Variables
 -- References
 -- Private Functions
@@ -80,20 +82,19 @@ end
 -- Class
 local Icosphere = {}
 
-function Icosphere.new(origin: CFrame, diameter: number, subdivisions: number): IcosphereVolume
-	local volume = RegularIcosahedron.new(origin, diameter)
+function Icosphere.new(center: CFrame, diameter: number, subdivisions: number): IcosphereVolume
+	local volume = RegularIcosahedron.new(center, diameter)
 	local radius = diameter / 2
-	local center = origin.Position
 
 	-- Start with the 20 icosahedron faces, then subdivide to form an icosphere
 	local faces: { TriangleFace } = RegularIcosahedron.faces(volume)
 	for i = 1, subdivisions do
-		faces = subdivide(faces, center, radius)
+		faces = subdivide(faces, center.Position, radius)
 	end
 
 	return {
 		Type = "Icosphere" :: "Icosphere",
-		Origin = origin,
+		Center = center,
 		Diameter = diameter,
 		Subdivisions = subdivisions,
 		Volume = volume,
@@ -122,4 +123,67 @@ function Icosphere.fill(
 		CFrames = cframes,
 	}
 end
+
+function Icosphere.edges(volume: IcosphereVolume): { Line.StraightLine }
+	local edges: { Line.StraightLine } = {}
+	local map: { [number]: true? } = {}
+	for _, face in volume.Faces do
+		for _, edge in Face.Triangle.edges(face) do
+			local id = Line.Straight.getId(edge)
+			if map[id] then continue end
+			map[id] = true
+			table.insert(edges, edge)
+		end
+	end
+	return edges
+end
+
+function Icosphere.vertices(volume: IcosphereVolume): { Point.VertexPoint }
+	local vertices: { Point.VertexPoint } = {}
+	local map: { [number]: true? } = {}
+	for _, face in volume.Faces do
+		for _, vertex in Face.Triangle.vertices(face) do
+			local id = Point.Vertex.getId(vertex)
+			if map[id] then continue end
+			map[id] = true
+			table.insert(vertices, vertex)
+		end
+	end
+	return vertices
+end
+
+function Icosphere.magnitude(volume: IcosphereVolume): number
+	local triangleArea = Face.Triangle.magnitude(volume.Faces[1])
+	local triangleCount = #volume.Faces
+	local r = volume.Diameter / 2
+	local side = math.sqrt(4 * triangleArea / math.sqrt(3))
+	local triCircumradius = side / math.sqrt(3)
+	local apothem = math.sqrt(r ^ 2 - triCircumradius ^ 2)
+	local sliceVolume = (1 / 3) * triangleArea * apothem
+	return sliceVolume * triangleCount
+end
+
+function Icosphere.faces(volume: IcosphereVolume): { Face.TriangleFace } return table.clone(volume.Faces) end
+
+function Icosphere.cframe(volume: IcosphereVolume): CFrame return volume.Center end
+
+function Icosphere.getId(volume: IcosphereVolume): number
+	return Util.cantor3Pair(
+		Util.cantorCFrame(volume.Center),
+		math.ceil(volume.Diameter / CONSTANTS.FUZZY_EQ.LENGTH),
+		volume.Subdivisions
+	)
+end
+
+function Icosphere.hash(volume: IcosphereVolume): string return `VR{Icosphere.getId(volume)}` end
+
+function Icosphere.eq(a: IcosphereVolume, b: IcosphereVolume): boolean
+	if a.Type ~= b.Type then return false end
+	if not Point.Any.eq(Point.Rotated.new(a.Center), Point.Rotated.new(b.Center)) then return false end
+	if math.abs(a.Diameter - b.Diameter) > CONSTANTS.FUZZY_EQ.LENGTH then return false end
+	if a.Subdivisions ~= b.Subdivisions then return false end
+
+	return true
+end
+
 return Icosphere

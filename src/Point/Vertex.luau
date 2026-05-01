@@ -34,6 +34,10 @@ end
 function Vertex.lerp(a: VertexPoint, b: VertexPoint, alpha: number): VertexPoint
 	return Vertex.new(a.Position:Lerp(b.Position, alpha), a.Normal:Lerp(b.Normal, alpha).Unit)
 end
+function Vertex.getId(point: VertexPoint): number
+	return Util.cantorCFrame(CFrame.lookAlong(point.Position, point.Normal))
+end
+function Vertex.hash(point: VertexPoint): string return `PV{Vertex.getId(point)}` end
 
 function Vertex.debug(point: VertexPoint): { Instance }
 	local out: { Instance } = {}

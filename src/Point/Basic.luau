@@ -9,6 +9,7 @@ local Util = require(script.Parent.Parent.Util)
 -- Types
 export type BasicPoint = PointUtil.BasicPoint
 -- Constants
+local CONSTANTS = require(script.Parent.Parent.CONSTANTS)
 -- Variables
 -- References
 -- Private Functions
@@ -32,6 +33,12 @@ end
 function Basic.lerp(a: BasicPoint, b: BasicPoint, alpha: number): BasicPoint
 	return Basic.new(a.Position:Lerp(b.Position, alpha))
 end
+
+function Basic.getId(point: BasicPoint): number
+	return Util.cantorV3((point.Position / CONSTANTS.FUZZY_EQ.LENGTH):Floor())
+end
+
+function Basic.hash(point: BasicPoint): string return `PB{Basic.getId(point)}` end
 
 function Basic.debug(point: BasicPoint): { Instance }
 	local out: { Instance } = {}

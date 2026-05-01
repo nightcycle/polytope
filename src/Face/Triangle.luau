@@ -206,6 +206,16 @@ function Triangle.edges(face: TriangleFace): { Line.StraightLine }
 	}
 end
 
+function Triangle.getId(face: TriangleFace): number
+	return Util.cantor3PairUnordered(
+		Point.Vertex.getId(face.P1),
+		Point.Vertex.getId(face.P2),
+		Point.Vertex.getId(face.P2)
+	)
+end
+
+function Triangle.hash(face: TriangleFace): string return `FT{Triangle.getId(face)}` end
+
 function Triangle.vertices(face: TriangleFace): { Point.VertexPoint }
 	return {
 		face.P1,
