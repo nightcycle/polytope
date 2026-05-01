@@ -1,7 +1,7 @@
 --!strict
 -- Services
 -- Packages
-local Package = require(game.ReplicatedStorage.Packages.package)
+local Package = require(game.ReplicatedStorage.Packages.Polytope)
 local Osiris = require(game.ReplicatedStorage.DevPackages.Osiris)
 -- Modules
 local Controllers = require(game.ReplicatedStorage.Shared.Controllers)
@@ -12,14 +12,15 @@ local Controllers = require(game.ReplicatedStorage.Shared.Controllers)
 -- Private Functions
 -- Class
 return function()
-	pcall(function(...)
-		Osiris.Init(game:GetService("CoreGui"), nil, false)
-	end)
+	pcall(function(...) Osiris.Init(game:GetService("CoreGui"), nil, false) end)
 	local instList: { Instance } = {}
 	local cleanUp = Osiris:Connect(function()
-		local p1 = Controllers.Osiris.SavedState(`{script:GetFullName()}/P1`, CFrame.new(Vector3.one + Vector3.new(10, 0, 0)))
-		local p2 = Controllers.Osiris.SavedState(`{script:GetFullName()}/P2`, CFrame.new(Vector3.one + Vector3.new(0, 5, 10)))
-		local p3 = Controllers.Osiris.SavedState(`{script:GetFullName()}/P3`, CFrame.new(Vector3.one + Vector3.new(2, 3, 2)))
+		local p1 =
+			Controllers.Osiris.SavedState(`{script:GetFullName()}/P1`, CFrame.new(Vector3.one + Vector3.new(10, 0, 0)))
+		local p2 =
+			Controllers.Osiris.SavedState(`{script:GetFullName()}/P2`, CFrame.new(Vector3.one + Vector3.new(0, 5, 10)))
+		local p3 =
+			Controllers.Osiris.SavedState(`{script:GetFullName()}/P3`, CFrame.new(Vector3.one + Vector3.new(2, 3, 2)))
 		local rowCount = Controllers.Osiris.SavedState(`{script:GetFullName()}/Rows`, 6)
 
 		local widget = Osiris.Widget.Text({
@@ -35,9 +36,7 @@ return function()
 				States = { value = v },
 				Extra = { parent = widget },
 			})
-			if v:changed() then
-				didChange = true
-			end
+			if v:changed() then didChange = true end
 		end
 		local windowSize = Controllers.Osiris.SavedState(`{script:GetFullName()}/ControlSize`, Vector2.new(150, 100))
 		Osiris.Widget.Window({
@@ -98,7 +97,7 @@ return function()
 							Value = rowCount:get(),
 							RetryOnceIfNotExact = true,
 						},
-					})--, up, r)
+					}) --, up, r)
 				do
 					local rectInsts = Package.Face.Any.debug(rect)
 					Package.Debug.color(rectInsts, Color3.new(1, 0.5, 0), "Part")

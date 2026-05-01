@@ -83,44 +83,32 @@ function Box.new(cf: CFrame, size: Vector3): BoxVolume
 		},
 		Faces = {
 			[Enum.NormalId.Front] = Face.Rectangle.new(
-				Point.Rotated.new(
-					CFrame.fromMatrix(cf:PointToWorldSpace(Vector3.zAxis * size / 2), cf.RightVector, cf.UpVector)
-				),
+				CFrame.fromMatrix(cf:PointToWorldSpace(Vector3.zAxis * size / 2), cf.RightVector, cf.UpVector),
 				size.Y,
 				size.X
 			),
 			[Enum.NormalId.Back] = Face.Rectangle.new(
-				Point.Rotated.new(
-					CFrame.fromMatrix(cf:PointToWorldSpace(-Vector3.zAxis * size / 2), cf.RightVector, cf.UpVector)
-				),
+				CFrame.fromMatrix(cf:PointToWorldSpace(-Vector3.zAxis * size / 2), cf.RightVector, cf.UpVector),
 				size.Y,
 				size.X
 			),
 			[Enum.NormalId.Right] = Face.Rectangle.new(
-				Point.Rotated.new(
-					CFrame.fromMatrix(cf:PointToWorldSpace(Vector3.xAxis * size / 2), -cf.LookVector, cf.UpVector)
-				),
+				CFrame.fromMatrix(cf:PointToWorldSpace(Vector3.xAxis * size / 2), -cf.LookVector, cf.UpVector),
 				size.Y,
 				size.Z
 			),
 			[Enum.NormalId.Left] = Face.Rectangle.new(
-				Point.Rotated.new(
-					CFrame.fromMatrix(cf:PointToWorldSpace(-Vector3.xAxis * size / 2), -cf.LookVector, cf.UpVector)
-				),
+				CFrame.fromMatrix(cf:PointToWorldSpace(-Vector3.xAxis * size / 2), -cf.LookVector, cf.UpVector),
 				size.Y,
 				size.Z
 			),
 			[Enum.NormalId.Top] = Face.Rectangle.new(
-				Point.Rotated.new(
-					CFrame.fromMatrix(cf:PointToWorldSpace(Vector3.yAxis * size / 2), cf.RightVector, -cf.LookVector)
-				),
+				CFrame.fromMatrix(cf:PointToWorldSpace(Vector3.yAxis * size / 2), cf.RightVector, -cf.LookVector),
 				size.Z,
 				size.X
 			),
 			[Enum.NormalId.Bottom] = Face.Rectangle.new(
-				Point.Rotated.new(
-					CFrame.fromMatrix(cf:PointToWorldSpace(-Vector3.yAxis * size / 2), cf.RightVector, -cf.LookVector)
-				),
+				CFrame.fromMatrix(cf:PointToWorldSpace(-Vector3.yAxis * size / 2), cf.RightVector, -cf.LookVector),
 				size.Z,
 				size.X
 			),

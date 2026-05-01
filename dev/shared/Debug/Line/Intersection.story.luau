@@ -1,7 +1,7 @@
 --!strict
 -- Services
 -- Packages
-local Package = require(game.ReplicatedStorage.Packages.package)
+local Package = require(game.ReplicatedStorage.Packages.Polytope)
 local Osiris = require(game.ReplicatedStorage.DevPackages.Osiris)
 local Draw = require(game.ReplicatedStorage.Packages.Draw)
 -- Modules
@@ -13,13 +13,13 @@ local Controllers = require(game.ReplicatedStorage.Shared.Controllers)
 -- Private Functions
 -- Class
 return function()
-	pcall(function(...)
-		Osiris.Init(game:GetService("CoreGui"), nil, false)
-	end)
+	pcall(function(...) Osiris.Init(game:GetService("CoreGui"), nil, false) end)
 	local instList: { Instance } = {}
 	local cleanUp = Osiris:Connect(function()
-		local o1 = Controllers.Osiris.SavedState(`{script:GetFullName()}/O1`, CFrame.new(Vector3.one + Vector3.new(10, 0, 0)))
-		local o2 = Controllers.Osiris.SavedState(`{script:GetFullName()}/O2`, CFrame.new(Vector3.one + Vector3.new(0, 5, 10)))
+		local o1 =
+			Controllers.Osiris.SavedState(`{script:GetFullName()}/O1`, CFrame.new(Vector3.one + Vector3.new(10, 0, 0)))
+		local o2 =
+			Controllers.Osiris.SavedState(`{script:GetFullName()}/O2`, CFrame.new(Vector3.one + Vector3.new(0, 5, 10)))
 		local windowSize = Controllers.Osiris.SavedState(`{script:GetFullName()}/ControlSize`, Vector2.new(150, 100))
 		local length1 = Controllers.Osiris.SavedState(`{script:GetFullName()}/Length1`, 10)
 		local length2 = Controllers.Osiris.SavedState(`{script:GetFullName()}/Length2`, 10)
@@ -37,9 +37,7 @@ return function()
 				States = { value = v },
 				Extra = { parent = widget },
 			})
-			if v:changed() then
-				didChange = true
-			end
+			if v:changed() then didChange = true end
 		end
 		Osiris.Widget.Window({
 			Arguments = {

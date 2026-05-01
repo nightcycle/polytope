@@ -16,7 +16,7 @@ local CONSTANTS = require(script.Parent.Parent.CONSTANTS)
 -- Class
 local Rectangle = {}
 
-function Rectangle.new(center: Point.RotatedPoint, height: number, width: number): RectangleFace
+function Rectangle.new(center: CFrame, height: number, width: number): RectangleFace
 	local face = {
 		Type = "Rectangle" :: "Rectangle",
 		Center = center,
@@ -27,11 +27,11 @@ function Rectangle.new(center: Point.RotatedPoint, height: number, width: number
 	return face :: RectangleFace
 end
 
-function Rectangle.normal(face: RectangleFace): Vector3 return -face.Center.CFrame.LookVector end
+function Rectangle.normal(face: RectangleFace): Vector3 return -face.Center.LookVector end
 
-function Rectangle.up(face: RectangleFace): Vector3 return face.Center.CFrame.UpVector end
+function Rectangle.up(face: RectangleFace): Vector3 return face.Center.UpVector end
 
-function Rectangle.right(face: RectangleFace): Vector3 return face.Center.CFrame.RightVector end
+function Rectangle.right(face: RectangleFace): Vector3 return face.Center.RightVector end
 
 function Rectangle.center(face: RectangleFace): Vector3 return face.Center.Position end
 
@@ -48,7 +48,7 @@ function Rectangle.fit(
 	if containmentType == "Rectangle" then
 		local rectCF, width, height =
 			FaceUtil.getMaxRect(CFrame.fromMatrix(center, right, up), Rectangle.vertices(face) :: { Point.Point })
-		return Rectangle.new(Point.Rotated.new(rectCF), height, width)
+		return Rectangle.new(rectCF, height, width)
 	else
 		error(`unsupported containment type: "{containmentType}"`)
 	end
@@ -109,12 +109,12 @@ function Rectangle.tile(
 			Direction = Enum.FillDirection.Horizontal,
 		}, up, right) :: { FaceUtil.RectangleFace }
 
-		local center = maxRect.Center.CFrame.Position
+		local center = maxRect.Center.Position
 		local cf = CFrame.lookAlong(center, normal, up)
 		local out = {}
 
 		for i, solution in FaceUtil.gridFromRowsAndColumns(cf, columns, rows) do
-			table.insert(out, Rectangle.new(Point.Rotated.new(solution.CFrame), solution.Height, solution.Width))
+			table.insert(out, Rectangle.new(solution.CFrame, solution.Height, solution.Width))
 		end
 
 		return out
@@ -132,9 +132,9 @@ function Rectangle.fill(face: RectangleFace, thickness: number?): FaceUtil.FillR
 		},
 		CFrames = {
 			CFrame.fromMatrix(
-				face.Center.Position - face.Center.Normal * part.Size.Z / 2,
-				face.Center.Up:Cross(-face.Center.Normal),
-				face.Center.Up
+				face.Center.Position - face.Center.LookVector * part.Size.Z / 2,
+				face.Center.UpVector:Cross(-face.Center.LookVector),
+				face.Center.UpVector
 			),
 		},
 	}
@@ -142,7 +142,7 @@ end
 
 function Rectangle.eq(a: RectangleFace, b: RectangleFace): boolean
 	if a.Type ~= b.Type then return false end
-	if not Point.Any.eq(a.Center, b.Center) then return false end
+	if not Point.Any.eq(Point.Rotated.new(a.Center), Point.Rotated.new(b.Center)) then return false end
 	if math.abs(a.Height - b.Height) > CONSTANTS.FUZZY_EQ.LENGTH then return false end
 	if math.abs(a.Width - b.Width) > CONSTANTS.FUZZY_EQ.LENGTH then return false end
 	return true
@@ -152,50 +152,33 @@ function Rectangle.magnitude(face: RectangleFace): number return face.Width * fa
 
 function Rectangle.isWithin(face: RectangleFace, point: Vector3): boolean
 	local offset = point - face.Center.Position
-	local projUp = math.abs(offset:Dot(face.Center.Up))
-	local projRight = math.abs(offset:Dot(face.Center.Up:Cross(-face.Center.Normal)))
-	local projNormal = math.abs(offset:Dot(face.Center.Normal))
+	local projUp = math.abs(offset:Dot(face.Center.UpVector))
+	local projRight = math.abs(offset:Dot(face.Center.UpVector:Cross(-face.Center.LookVector)))
+	local projNormal = math.abs(offset:Dot(face.Center.LookVector))
 	return projUp <= face.Height / 2 + CONSTANTS.FUZZY_EQ.LENGTH
 		and projRight <= face.Width / 2 + CONSTANTS.FUZZY_EQ.LENGTH
 		and projNormal < CONSTANTS.FUZZY_EQ.LENGTH
 end
 
 function Rectangle.vertices(face: RectangleFace): { Point.RotatedPoint }
-	local widthVec = (face.Center.Up:Cross(-face.Center.Normal)) * face.Width
-	local heightVec = face.Center.Up * face.Height
+	local widthVec = (face.Center.UpVector:Cross(-face.Center.LookVector)) * face.Width
+	local heightVec = face.Center.UpVector * face.Height
 	local origin = face.Center.Position - widthVec / 2 - heightVec / 2
 	return {
+		Point.Rotated.new(CFrame.fromMatrix(origin, face.Center.XVector, face.Center.YVector, face.Center.ZVector)),
 		Point.Rotated.new(
-			CFrame.fromMatrix(
-				origin,
-				face.Center.CFrame.XVector,
-				face.Center.CFrame.YVector,
-				face.Center.CFrame.ZVector
-			)
-		),
-		Point.Rotated.new(
-			CFrame.fromMatrix(
-				origin + widthVec,
-				face.Center.CFrame.XVector,
-				face.Center.CFrame.YVector,
-				face.Center.CFrame.ZVector
-			)
+			CFrame.fromMatrix(origin + widthVec, face.Center.XVector, face.Center.YVector, face.Center.ZVector)
 		),
 		Point.Rotated.new(
 			CFrame.fromMatrix(
 				origin + widthVec + heightVec,
-				face.Center.CFrame.XVector,
-				face.Center.CFrame.YVector,
-				face.Center.CFrame.ZVector
+				face.Center.XVector,
+				face.Center.YVector,
+				face.Center.ZVector
 			)
 		),
 		Point.Rotated.new(
-			CFrame.fromMatrix(
-				origin + heightVec,
-				face.Center.CFrame.XVector,
-				face.Center.CFrame.YVector,
-				face.Center.CFrame.ZVector
-			)
+			CFrame.fromMatrix(origin + heightVec, face.Center.XVector, face.Center.YVector, face.Center.ZVector)
 		),
 	}
 end

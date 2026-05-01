@@ -1,7 +1,7 @@
 --!strict
 -- Services
 -- Packages
-local Package = require(game.ReplicatedStorage.Packages.package)
+local Package = require(game.ReplicatedStorage.Packages.Polytope)
 local Osiris = require(game.ReplicatedStorage.DevPackages.Osiris)
 -- Modules
 local Controllers = require(game.ReplicatedStorage.Shared.Controllers)
@@ -12,9 +12,7 @@ local Controllers = require(game.ReplicatedStorage.Shared.Controllers)
 -- Private Functions
 -- Class
 return function(frame)
-	pcall(function(...)
-		Osiris.Init(game:GetService("CoreGui"), nil, false)
-	end)
+	pcall(function(...) Osiris.Init(game:GetService("CoreGui"), nil, false) end)
 	local instList: { Instance } = {}
 	local cleanUp = Osiris:Connect(function(): ()
 		local widget = Osiris.Widget.Text({
@@ -36,9 +34,7 @@ return function(frame)
 				States = { value = cfState },
 				Extra = { parent = widget },
 			})
-			if cfState:changed() then
-				didChange = true
-			end
+			if cfState:changed() then didChange = true end
 		end
 
 		Osiris.Widget.Window({
@@ -100,8 +96,7 @@ return function(frame)
 			for i, v in instList do
 				v:Destroy()
 			end
-			local face =
-				Package.Face.RegularNGon.new(Package.Point.Rotated.new(cfState:get()), length:get(), pointNumber:get())
+			local face = Package.Face.RegularNGon.new(cfState:get(), length:get(), pointNumber:get())
 			do
 				Package.ENV.DEBUG_SHOW_NORMALS = false
 				-- local n = Package.Face.Any.normal(face).Unit
@@ -120,7 +115,7 @@ return function(frame)
 							Value = rowCount:get(),
 							RetryOnceIfNotExact = true,
 						},
-					})--, up, r)
+					}) --, up, r)
 				do
 					local rectInsts = Package.Face.Any.debug(rect)
 					Package.Debug.color(rectInsts, Color3.new(1, 0.5, 0), "Part")

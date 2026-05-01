@@ -77,11 +77,11 @@ function RegularNGon.eq(a: RegularNGonFace, b: RegularNGonFace): boolean
 	return true
 end
 
-function RegularNGon.normal(face: RegularNGonFace): Vector3 return face.Center.Normal end
+function RegularNGon.normal(face: RegularNGonFace): Vector3 return face.Center.LookVector end
 
-function RegularNGon.up(face: RegularNGonFace): Vector3 return face.Center.CFrame.UpVector end
+function RegularNGon.up(face: RegularNGonFace): Vector3 return face.Center.UpVector end
 
-function RegularNGon.right(face: RegularNGonFace): Vector3 return face.Center.CFrame.RightVector end
+function RegularNGon.right(face: RegularNGonFace): Vector3 return face.Center.RightVector end
 
 function RegularNGon.center(face: RegularNGonFace): Vector3 return face.Center.Position end
 
@@ -154,14 +154,7 @@ function RegularNGon.tile(
 				table.insert(
 					out,
 					Rectangle.new(
-						Point.Rotated.new(
-							CFrame.fromMatrix(
-								cf.Position + (xMin + rWidth / 2) * right,
-								cf.XVector,
-								cf.YVector,
-								cf.ZVector
-							)
-						),
+						CFrame.fromMatrix(cf.Position + (xMin + rWidth / 2) * right, cf.XVector, cf.YVector, cf.ZVector),
 						rHeight,
 						rWidth
 					)
@@ -215,7 +208,7 @@ function RegularNGon.tile(
 		local out = {}
 
 		for i, solution in FaceUtil.gridFromRowsAndColumns(cf, columns, rows) do
-			table.insert(out, Rectangle.new(Point.Rotated.new(solution.CFrame), solution.Height, solution.Width))
+			table.insert(out, Rectangle.new(solution.CFrame, solution.Height, solution.Width))
 		end
 
 		return out
@@ -237,10 +230,10 @@ function RegularNGon.fit(
 	if containmentType == "Rectangle" then
 		local cf = CFrame.fromMatrix(center, right, up)
 		if face.SideCount > CONSTANTS.NGON_IS_CIRCLE_AFTER then
-			return Rectangle.new(Point.Rotated.new(cf), face.Diameter, face.Diameter)
+			return Rectangle.new(cf, face.Diameter, face.Diameter)
 		else
 			local rectCF, width, height = FaceUtil.getMaxRect(cf, RegularNGon.vertices(face) :: { Point.Point })
-			return Rectangle.new(Point.Rotated.new(rectCF), height, width)
+			return Rectangle.new(rectCF, height, width)
 		end
 	else
 		error(`unsupported containment type: "{containmentType}"`)

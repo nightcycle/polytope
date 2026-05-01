@@ -84,7 +84,7 @@ function Quad.fit(
 	if containmentType == "Rectangle" then
 		local rectCF, width, height =
 			FaceUtil.getMaxRect(CFrame.fromMatrix(center, right, up), Quad.vertices(face) :: { Point.Point })
-		return Rectangle.new(Point.Rotated.new(rectCF), height, width)
+		return Rectangle.new(rectCF, height, width)
 	else
 		error(`unsupported containmentType: "{containmentType}"`)
 	end
@@ -200,11 +200,11 @@ function Quad.tile(face: QuadFace, format: FaceUtil.TileFormat, up: Vector3?, ri
 				Direction = Enum.FillDirection.Horizontal,
 			}, up, right) :: { FaceUtil.RectangleFace }
 
-			local center = maxRect.Center.CFrame.Position
+			local center = maxRect.Center.Position
 			local cf = CFrame.lookAlong(center, normal, up)
 
 			for i, solution in FaceUtil.gridFromRowsAndColumns(cf, columns, rows) do
-				table.insert(out, Rectangle.new(Point.Rotated.new(solution.CFrame), solution.Height, solution.Width))
+				table.insert(out, Rectangle.new(solution.CFrame, solution.Height, solution.Width))
 			end
 		end
 	else

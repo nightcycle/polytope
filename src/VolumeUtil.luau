@@ -22,8 +22,13 @@ export type RegularIcosahedronVolume = {
 	Origin: CFrame,
 	Diameter: number,
 }
-
-
+export type IcosphereVolume = {
+	Type: "Icosphere",
+	Origin: CFrame,
+	Diameter: number,
+	Subdivisions: number,
+	Faces: { Face.TriangleFace },
+}
 
 export type FillResult = {
 	Parts: { BasePart },

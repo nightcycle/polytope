@@ -1,0 +1,125 @@
+--!strict
+-- Services
+-- Packages
+-- Modules
+local Point = require(script.Parent.Parent.Point)
+local Face = require(script.Parent.Parent.Face)
+local VolumeUtil = require(script.Parent.Parent.VolumeUtil)
+local RegularIcosahedron = require(script.Parent.RegularIcosahedron)
+local Util = require(script.Parent.Parent.Util)
+-- Types
+export type IcosphereVolume = VolumeUtil.IcosphereVolume
+export type TriangleFace = Face.TriangleFace
+-- Constants
+-- Variables
+-- References
+-- Private Functions
+
+function getEdgeKey(a: Vector3, b: Vector3): string
+	local ax = math.round(a.X * 1000)
+	local ay = math.round(a.Y * 1000)
+	local az = math.round(a.Z * 1000)
+	local bx = math.round(b.X * 1000)
+	local by = math.round(b.Y * 1000)
+	local bz = math.round(b.Z * 1000)
+
+	local aHash = ax * 1000000 + ay * 1000 + az
+	local bHash = bx * 1000000 + by * 1000 + bz
+
+	if aHash < bHash then
+		return `{aHash}_{bHash}`
+	else
+		return `{bHash}_{aHash}`
+	end
+end
+
+function getMidpoint(
+	a: Point.VertexPoint,
+	b: Point.VertexPoint,
+	center: Vector3,
+	radius: number,
+	cache: { [string]: Point.VertexPoint }
+): Point.VertexPoint
+	local key = getEdgeKey(a.Position, b.Position)
+	local cached = cache[key]
+	if cached then return cached end
+
+	-- Lerp to midpoint then project onto sphere
+	local midPos = a.Position:Lerp(b.Position, 0.5)
+	local direction = (midPos - center).Unit
+	local projectedPos = center + direction * radius
+	local normal = direction
+
+	local vertex = Point.Vertex.new(projectedPos, normal)
+	cache[key] = vertex
+	return vertex
+end
+
+function subdivide(faces: { TriangleFace }, center: Vector3, radius: number): { TriangleFace }
+	local midpointCache: { [string]: Point.VertexPoint } = {}
+	local newFaces: { TriangleFace } = table.create(#faces * 4) :: { TriangleFace }
+
+	for _, face in faces do
+		local p1 = face.P1
+		local p2 = face.P2
+		local p3 = face.P3
+
+		local m12 = getMidpoint(p1, p2, center, radius, midpointCache)
+		local m23 = getMidpoint(p2, p3, center, radius, midpointCache)
+		local m31 = getMidpoint(p3, p1, center, radius, midpointCache)
+
+		table.insert(newFaces, Face.Triangle.new(p1, m12, m31))
+		table.insert(newFaces, Face.Triangle.new(p2, m23, m12))
+		table.insert(newFaces, Face.Triangle.new(p3, m31, m23))
+		table.insert(newFaces, Face.Triangle.new(m12, m23, m31))
+	end
+
+	return newFaces
+end
+
+-- Class
+local Icosphere = {}
+
+function Icosphere.new(origin: CFrame, diameter: number, subdivisions: number): IcosphereVolume
+	local volume = RegularIcosahedron.new(origin, diameter)
+	local radius = diameter / 2
+	local center = origin.Position
+
+	-- Start with the 20 icosahedron faces, then subdivide to form an icosphere
+	local faces: { TriangleFace } = RegularIcosahedron.faces(volume)
+	for i = 1, subdivisions do
+		faces = subdivide(faces, center, radius)
+	end
+
+	return {
+		Type = "Icosphere" :: "Icosphere",
+		Origin = origin,
+		Diameter = diameter,
+		Subdivisions = subdivisions,
+		Volume = volume,
+		Faces = faces,
+	}
+end
+
+function Icosphere.fill(
+	planet: IcosphereVolume,
+	thickness: number?,
+	filter: ((face: TriangleFace) -> boolean)?
+): VolumeUtil.FillResult
+	local faces = planet.Faces
+	local parts: { BasePart } = table.create(#faces * 2) :: { BasePart }
+	local cframes: { CFrame } = table.create(#faces * 2) :: { CFrame }
+
+	for _, face in faces do
+		if filter and not filter(face) then continue end
+		local res = Face.Triangle.fill(face, thickness)
+		Util.join(parts, res.Parts)
+		Util.join(cframes, res.CFrames)
+	end
+
+	return {
+		Parts = parts,
+		CFrames = cframes,
+	}
+end
+return Icosphere

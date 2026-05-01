@@ -7,6 +7,7 @@ local RegularIcosahedron = require(script.RegularIcosahedron)
 
 -- Types
 export type BoxVolume = Box.BoxVolume
+export type RegularIcosahedronVolume = RegularIcosahedron.RegularIcosahedronVolume
 -- Constants
 -- Variables
 -- References
@@ -18,4 +19,3 @@ Module.Box = Box
 Module.RegularIcosahedron = RegularIcosahedron
 
 return Module
-

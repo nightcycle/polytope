@@ -120,7 +120,7 @@ function Triangle.fit(
 			FaceUtil.getMaxRect(CFrame.fromMatrix(center, right, up), Triangle.vertices(face) :: { Point.Point })
 		local rectangle: FaceUtil.RectangleFace = {
 			Type = "Rectangle",
-			Center = Point.Rotated.new(rectCF),
+			Center = rectCF,
 			Height = height,
 			Width = width,
 		}
@@ -184,12 +184,12 @@ function Triangle.tile(
 			Direction = Enum.FillDirection.Horizontal,
 		}, up, right) :: { FaceUtil.RectangleFace }
 
-		local center = maxRect.Center.CFrame.Position
+		local center = maxRect.Center.Position
 		local cf = CFrame.lookAlong(center, normal, up)
 		local out = {}
 
 		for i, solution in FaceUtil.gridFromRowsAndColumns(cf, columns, rows) do
-			table.insert(out, Rectangle.new(Point.Rotated.new(solution.CFrame), solution.Height, solution.Width))
+			table.insert(out, Rectangle.new(solution.CFrame, solution.Height, solution.Width))
 		end
 
 		return out

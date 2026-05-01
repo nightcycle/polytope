@@ -7,7 +7,6 @@ local LineUtil = require(script.LineUtil)
 local PointUtil = require(script.PointUtil)
 local VolumeUtil = require(script.VolumeUtil)
 
-
 -- Types
 export type Point = PointUtil.Point
 export type BasicPoint = PointUtil.BasicPoint
@@ -23,6 +22,8 @@ export type RegularNGonFace = FaceUtil.RegularNGonFace
 export type TriangleFace = FaceUtil.TriangleFace
 export type BoxVolume = VolumeUtil.BoxVolume
 export type RegularIcosahedronVolume = VolumeUtil.RegularIcosahedronVolume
+export type IcosphereVolume = VolumeUtil.IcosphereVolume
+
 -- Constants
 -- Variables
 -- References

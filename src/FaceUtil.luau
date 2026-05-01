@@ -8,7 +8,7 @@ local Line = require(script.Parent.Line)
 -- Types
 export type RectangleFace = {
 	Type: "Rectangle",
-	Center: Point.RotatedPoint,
+	Center: CFrame,
 	Height: number,
 	Width: number,
 }
@@ -20,7 +20,7 @@ export type TriangleFace = {
 }
 export type RegularNGonFace = {
 	Type: "RegularNGon",
-	Center: Point.RotatedPoint,
+	Center: CFrame,
 	Diameter: number,
 	SideCount: number,
 	Triangles: { TriangleFace },
@@ -147,7 +147,7 @@ function Util.tileRowsByStraightEdgeHits(
 		return {} -- done :D
 	end
 	local halfHeight = maxRect.Height / 2
-	local center = maxRect.Center.CFrame.Position
+	local center = maxRect.Center.Position
 	local cf = CFrame.lookAlong(center, normal, up)
 
 	local function getHits(pos: Vector3, offset: Vector3): { Vector3 }
@@ -269,7 +269,7 @@ function Util.gridFromRowsAndColumns(
 	local out = {}
 
 	for x, column in columns do
-		local colOffset = cf:PointToObjectSpace(column.Center.CFrame.Position)
+		local colOffset = cf:PointToObjectSpace(column.Center.Position)
 
 		local colXHalfLength = column.Width / 2
 		local colXMin = colOffset.X - colXHalfLength
@@ -282,7 +282,7 @@ function Util.gridFromRowsAndColumns(
 		local colYMax = colOffset.Y + colYHalfWidth
 
 		for y, row in rows do
-			local rowYOffset = cf:PointToObjectSpace(row.Center.CFrame.Position)
+			local rowYOffset = cf:PointToObjectSpace(row.Center.Position)
 
 			local yOffset = rowYOffset.Y
 

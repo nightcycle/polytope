@@ -1,7 +1,7 @@
 --!strict
 -- Services
 -- Packages
-local Package = require(game.ReplicatedStorage.Packages.package)
+local Package = require(game.ReplicatedStorage.Packages.Polytope)
 local Osiris = require(game.ReplicatedStorage.DevPackages.Osiris)
 -- Modules
 local Controllers = require(game.ReplicatedStorage.Shared.Controllers)
@@ -12,9 +12,7 @@ local Controllers = require(game.ReplicatedStorage.Shared.Controllers)
 -- Private Functions
 -- Class
 return function()
-	pcall(function(...)
-		Osiris.Init(game:GetService("CoreGui"), nil, false)
-	end)
+	pcall(function(...) Osiris.Init(game:GetService("CoreGui"), nil, false) end)
 	local instList: { Instance } = {}
 	local cleanUp = Osiris:Connect(function()
 		local widget = Osiris.Widget.Text({
@@ -32,9 +30,7 @@ return function()
 				States = { value = cfState },
 				Extra = { parent = widget },
 			})
-			if cfState:changed() then
-				didChange = true
-			end
+			if cfState:changed() then didChange = true end
 		end
 		local sizeState = Controllers.Osiris.SavedState(`{script:GetFullName()}/Size`, Vector3.one * 5)
 		local windowSize = Controllers.Osiris.SavedState(`{script:GetFullName()}/ControlSize`, Vector2.new(150, 100))
