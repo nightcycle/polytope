@@ -40,5 +40,6 @@ Module.Point = require(script.Point)
 Module.ENV = require(script.ENV)
 Module.Util = require(script.Util)
 Module.Debug = require(script.Debug)
+Module.CONSTANTS = require(script.CONSTANTS)
 
 return Module
