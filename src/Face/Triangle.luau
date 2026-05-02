@@ -214,10 +214,11 @@ function Triangle.addMeshFace(face: TriangleFace, mesh: EditableMesh, origin: CF
 		end
 	end
 	if flatShade then
+		local nId = Point.Vertex.addMeshNormal(face.P1, mesh, origin)
 		mesh:SetFaceNormals(fId, {
-			Point.Vertex.addMeshNormal(face.P1, mesh, origin),
-			Point.Vertex.addMeshNormal(face.P1, mesh, origin),
-			Point.Vertex.addMeshNormal(face.P1, mesh, origin),
+			nId,
+			nId,
+			nId,
 		})
 	end
 	return fId
