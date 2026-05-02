@@ -188,9 +188,9 @@ function Triangle.vertices(face: TriangleFace): { Point.VertexPoint }
 end
 
 function Triangle.addMeshFace(face: TriangleFace, mesh: EditableMesh, origin: CFrame): number
-	local vId1 = Point.Vertex.findMeshVertex(face.P1, mesh, origin) or Point.Vertex.addMeshVertex(face.P1, mesh, origin)
-	local vId2 = Point.Vertex.findMeshVertex(face.P2, mesh, origin) or Point.Vertex.addMeshVertex(face.P2, mesh, origin)
-	local vId3 = Point.Vertex.findMeshVertex(face.P3, mesh, origin) or Point.Vertex.addMeshVertex(face.P3, mesh, origin)
+	local vId1 = Point.Vertex.addMeshVertex(face.P1, mesh, origin)
+	local vId2 = Point.Vertex.addMeshVertex(face.P2, mesh, origin)
+	local vId3 = Point.Vertex.addMeshVertex(face.P3, mesh, origin)
 	local fId = mesh:AddTriangle(vId1, vId2, vId3)
 	mesh:SetFaceNormals(fId, {
 		Point.Vertex.addMeshNormal(face.P1, mesh, origin),
