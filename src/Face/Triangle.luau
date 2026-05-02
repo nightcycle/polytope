@@ -187,16 +187,39 @@ function Triangle.vertices(face: TriangleFace): { Point.VertexPoint }
 	}
 end
 
-function Triangle.addMeshFace(face: TriangleFace, mesh: EditableMesh, origin: CFrame): number
+function Triangle.addMeshFace(face: TriangleFace, mesh: EditableMesh, origin: CFrame, flatShade: boolean): number
 	local vId1 = Point.Vertex.addMeshVertex(face.P1, mesh, origin)
 	local vId2 = Point.Vertex.addMeshVertex(face.P2, mesh, origin)
 	local vId3 = Point.Vertex.addMeshVertex(face.P3, mesh, origin)
-	local fId = mesh:AddTriangle(vId1, vId2, vId3)
-	mesh:SetFaceNormals(fId, {
-		Point.Vertex.addMeshNormal(face.P1, mesh, origin),
-		Point.Vertex.addMeshNormal(face.P2, mesh, origin),
-		Point.Vertex.addMeshNormal(face.P3, mesh, origin),
-	})
+	local avg = (face.P1.Normal + face.P2.Normal + face.P3.Normal) / 3
+	local fromPos = (face.P2.Position - face.P1.Position):Cross(face.P3.Position - face.P1.Position).Unit
+	local fId: number
+	if fromPos:Dot(avg) > 0 then
+		fId = mesh:AddTriangle(vId1, vId2, vId3)
+		if not flatShade then
+			mesh:SetFaceNormals(fId, {
+				Point.Vertex.addMeshNormal(face.P1, mesh, origin),
+				Point.Vertex.addMeshNormal(face.P2, mesh, origin),
+				Point.Vertex.addMeshNormal(face.P3, mesh, origin),
+			})
+		end
+	else
+		fId = mesh:AddTriangle(vId1, vId3, vId2)
+		if not flatShade then
+			mesh:SetFaceNormals(fId, {
+				Point.Vertex.addMeshNormal(face.P1, mesh, origin),
+				Point.Vertex.addMeshNormal(face.P3, mesh, origin),
+				Point.Vertex.addMeshNormal(face.P2, mesh, origin),
+			})
+		end
+	end
+	if flatShade then
+		mesh:SetFaceNormals(fId, {
+			Point.Vertex.addMeshNormal(face.P1, mesh, origin),
+			Point.Vertex.addMeshNormal(face.P1, mesh, origin),
+			Point.Vertex.addMeshNormal(face.P1, mesh, origin),
+		})
+	end
 	return fId
 end
 

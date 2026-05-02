@@ -9,7 +9,6 @@ local Util = require(script.Parent.Parent.Util)
 -- Types
 export type RotatedPoint = PointUtil.RotatedPoint
 -- Constants
-local CONSTANTS = require(script.Parent.Parent.CONSTANTS)
 -- Variables
 -- References
 -- Private Functions
