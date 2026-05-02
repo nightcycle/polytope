@@ -200,33 +200,4 @@ function Triangle.addMeshFace(face: TriangleFace, mesh: EditableMesh, origin: CF
 	return fId
 end
 
-function Triangle.removeMeshFace(face: TriangleFace, mesh: EditableMesh, origin: CFrame): boolean
-	local fId = Triangle.findMeshFace(face, mesh, origin)
-	if fId then
-		mesh:RemoveFace(fId)
-		return true
-	end
-	return false
-end
-
-function Triangle.findMeshFace(face: TriangleFace, mesh: EditableMesh, origin: CFrame): number?
-	local vId1 = Point.Vertex.findMeshVertex(face.P1, mesh, origin)
-	local vId2 = Point.Vertex.findMeshVertex(face.P2, mesh, origin)
-	local vId3 = Point.Vertex.findMeshVertex(face.P3, mesh, origin)
-	if not vId1 or not vId2 or not vId3 then return nil end
-	local faceMap: { [number]: number } = {}
-	for i, fId in mesh:GetVertexFaces(vId1) do
-		faceMap[fId] = 1
-	end
-	for i, fId in mesh:GetVertexFaces(vId2) do
-		if not faceMap[fId] then continue end
-		faceMap[fId] += 1
-	end
-	for i, fId in mesh:GetVertexFaces(vId3) do
-		if not faceMap[fId] then continue end
-		if faceMap[fId] == 2 then return fId end
-	end
-	return nil
-end
-
 return Triangle

@@ -44,13 +44,4 @@ function Basic.addMeshVertex(point: BasicPoint, mesh: EditableMesh, origin: CFra
 	return mesh:AddVertex(origin:PointToObjectSpace(point.Position))
 end
 
-function Basic.findMeshVertex(point: BasicPoint, mesh: EditableMesh, origin: CFrame): number?
-	local vId = mesh:FindClosestVertex(origin:PointToObjectSpace(point.Position))
-	if vId and vId > 0 then
-		local vPos = origin:PointToWorldSpace(mesh:GetPosition(vId))
-		if (vPos - point.Position).Magnitude <= CONSTANTS.FUZZY_EQ.LENGTH then return vId end
-	end
-	return nil
-end
-
 return Basic

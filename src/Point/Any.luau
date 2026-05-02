@@ -101,16 +101,4 @@ function Rotated.addMeshNormal(point: Point, mesh: EditableMesh, origin: CFrame)
 	end
 end
 
-function Any.findMeshVertex(point: Point, mesh: EditableMesh, origin: CFrame): number?
-	if point.Type == "Basic" then
-		return Basic.findMeshVertex(point, mesh, origin)
-	elseif point.Type == "Vertex" then
-		return Vertex.findMeshVertex(point, mesh, origin)
-	elseif point.Type == "Rotated" then
-		return Rotated.findMeshVertex(point, mesh, origin)
-	else
-		error(`bad type: "{point.Type}"`)
-	end
-end
-
 return Any

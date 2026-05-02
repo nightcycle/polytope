@@ -51,13 +51,4 @@ function Rotated.addMeshNormal(point: RotatedPoint, mesh: EditableMesh, origin: 
 	return mesh:AddNormal(origin:VectorToObjectSpace(point.Normal))
 end
 
-function Rotated.findMeshVertex(point: RotatedPoint, mesh: EditableMesh, origin: CFrame): number?
-	local vId = mesh:FindClosestVertex(origin:PointToObjectSpace(point.Position))
-	if vId and vId > 0 then
-		local vPos = origin:PointToWorldSpace(mesh:GetPosition(vId))
-		if (vPos - point.Position).Magnitude <= CONSTANTS.FUZZY_EQ.LENGTH then return vId end
-	end
-	return nil
-end
-
 return Rotated
